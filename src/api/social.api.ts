@@ -74,10 +74,16 @@ export const socialApi = {
   // Get followers
   getFollowers: async (userId: ID): Promise<{ followers: User[]; total: number }> => {
     try {
-      const response = await axiosClient.get<{ followers: User[]; total: number }>(
-        `/social/followers/${userId}`
-      );
-      return response.data;
+      const response = await axiosClient.get(`/social/followers/${userId}`);
+      const data = response.data;
+      
+      // Normalize various possible shapes
+      const followers = Array.isArray(data)
+        ? data
+        : data?.followers ?? data?.items ?? data?.data ?? [];
+      const total = data?.total ?? data?.total_count ?? data?.count ?? followers.length ?? 0;
+      
+      return { followers, total };
     } catch (error) {
       if (shouldUseMock(error)) {
         await mockDelay();
@@ -90,10 +96,16 @@ export const socialApi = {
   // Get following
   getFollowing: async (userId: ID): Promise<{ following: User[]; total: number }> => {
     try {
-      const response = await axiosClient.get<{ following: User[]; total: number }>(
-        `/social/following/${userId}`
-      );
-      return response.data;
+      const response = await axiosClient.get(`/social/following/${userId}`);
+      const data = response.data;
+      
+      // Normalize various possible shapes
+      const following = Array.isArray(data)
+        ? data
+        : data?.following ?? data?.items ?? data?.data ?? [];
+      const total = data?.total ?? data?.total_count ?? data?.count ?? following.length ?? 0;
+      
+      return { following, total };
     } catch (error) {
       if (shouldUseMock(error)) {
         await mockDelay();

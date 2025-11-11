@@ -10,16 +10,10 @@ export function Intro() {
         <div className="text-center max-w-4xl mx-auto">
           {/* Logo */}
           <div className="flex justify-center mb-8">
-            <div className="w-24 h-24 bg-gradient-to-br from-[#FE2C55] to-[#00F2EA] rounded-3xl flex items-center justify-center shadow-2xl">
-              <span className="text-white font-bold text-5xl">T</span>
+            <div className="bg-gradient-to-br from-[#FE2C55] to-[#00F2EA] rounded-3xl flex items-center justify-center shadow-2xl px-10 py-4">
+              <span className="text-white font-bold text-5xl"> Toptop </span>
             </div>
-          </div>
-
-          {/* Title */}
-          <h1 className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-[#FE2C55] to-[#00F2EA] bg-clip-text text-transparent">
-            TikTok Clone
-          </h1>
-          
+          </div>         
           <p className="text-xl md:text-2xl text-gray-600 mb-12">
             Khám phá video thú vị, kết nối với cộng đồng, và chia sẻ khoảnh khắc của bạn
           </p>

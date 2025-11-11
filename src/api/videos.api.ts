@@ -17,19 +17,56 @@ import {
 
 export const videosApi = {
   // Get video feed
-  getVideos: async (params?: PaginationParams): Promise<VideosResponse> => {
+  getVideos: async (params?: PaginationParams & { sort?: string; order?: 'asc' | 'desc' }): Promise<VideosResponse> => {
     try {
-      const response = await axiosClient.get<VideosResponse>('/videos/', { params });
-      
+      const response = await axiosClient.get<any>('/videos/', {
+        params: { ...params, sort: params?.sort || 'createdAt', order: params?.order || 'desc' },
+      });
+
+      const data = response.data;
+      const videos = Array.isArray(data) ? data : data?.videos;
+
       // If API returns empty, use mock data
-      if (!response.data.videos || response.data.videos.length === 0) {
+      if (!videos || videos.length === 0) {
         console.log('📦 API returned empty, using mock videos');
         await mockDelay();
         const page = params?.page || 1;
         const pageSize = params?.pageSize || 10;
         const start = (page - 1) * pageSize;
         const end = start + pageSize;
-        const videos = mockVideos.slice(start, end);
+        // Sort mock videos by createdAt desc to mimic newest first
+        const videosSorted = [...mockVideos].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        const paged = videosSorted.slice(start, end);
+        return {
+          videos: paged,
+          total: mockVideos.length,
+          page,
+          pageSize,
+          hasMore: end < mockVideos.length,
+        };
+      }
+
+      // If backend returned array directly, wrap into normalized response
+      if (Array.isArray(data)) {
+        const page = params?.page || 1;
+        const pageSize = params?.pageSize || data.length;
+        return { videos: data, total: data.length, page, pageSize, hasMore: false };
+      }
+
+      return data as VideosResponse;
+    } catch (error) {
+      if (shouldUseMock(error)) {
+        await mockDelay();
+        const page = params?.page || 1;
+        const pageSize = params?.pageSize || 10;
+        const start = (page - 1) * pageSize;
+        const end = start + pageSize;
+        const videosSorted = [...mockVideos].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        const videos = videosSorted.slice(start, end);
         return {
           videos,
           total: mockVideos.length,
@@ -38,8 +75,55 @@ export const videosApi = {
           hasMore: end < mockVideos.length,
         };
       }
-      
-      return response.data;
+      throw error;
+    }
+  },
+
+  // Get following feed - videos from users you follow
+  getFollowingFeed: async (params?: PaginationParams): Promise<VideosResponse> => {
+    try {
+      const response = await axiosClient.get<any>('/videos/following/feed', {
+        params,
+      });
+
+      const data = response.data;
+      const videos = Array.isArray(data) ? data : data?.videos ?? data?.items ?? data?.data ?? [];
+
+      // If API returns empty, use mock data
+      if (!videos || videos.length === 0) {
+        console.log('📦 Following feed empty, using mock videos');
+        await mockDelay();
+        const page = params?.page || 1;
+        const pageSize = params?.pageSize || 10;
+        const start = (page - 1) * pageSize;
+        const end = start + pageSize;
+        const videosSorted = [...mockVideos].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        const paged = videosSorted.slice(start, end);
+        return {
+          videos: paged,
+          total: mockVideos.length,
+          page,
+          pageSize,
+          hasMore: end < mockVideos.length,
+        };
+      }
+
+      // Normalize response
+      if (Array.isArray(data)) {
+        const page = params?.page || 1;
+        const pageSize = params?.pageSize || data.length;
+        return { videos: data, total: data.length, page, pageSize, hasMore: false };
+      }
+
+      return {
+        videos,
+        total: data?.total ?? data?.total_count ?? data?.count ?? videos.length,
+        page: data?.page ?? params?.page ?? 1,
+        pageSize: data?.pageSize ?? data?.page_size ?? params?.pageSize ?? videos.length,
+        hasMore: data?.hasMore ?? data?.has_more ?? false,
+      };
     } catch (error) {
       if (shouldUseMock(error)) {
         await mockDelay();
@@ -47,7 +131,10 @@ export const videosApi = {
         const pageSize = params?.pageSize || 10;
         const start = (page - 1) * pageSize;
         const end = start + pageSize;
-        const videos = mockVideos.slice(start, end);
+        const videosSorted = [...mockVideos].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        const videos = videosSorted.slice(start, end);
         return {
           videos,
           total: mockVideos.length,

@@ -76,10 +76,15 @@ axiosClient.interceptors.response.use(
 
     // Handle 401 Unauthorized
     if (error.response?.status === 401) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('user');
-      window.location.href = '/auth/login';
-      toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+      // Allow certain calls to opt-out of global logout on 401
+      const cfg: any = error.config || {};
+      const skipAuthRedirect = cfg.headers?.['X-Skip-Auth-Redirect'] === '1' || cfg.skipAuthRedirect === true;
+      if (!skipAuthRedirect) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
+        window.location.href = '/auth/login';
+        toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+      }
     }
 
     // Handle 403 Forbidden

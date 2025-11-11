@@ -11,20 +11,15 @@ export const commentsApi = {
   // Get comments for a video
   getVideoComments: async (videoId: number): Promise<CommentsResponse> => {
     try {
-      const response = await axiosClient.get<CommentsResponse>(`/comments/video/${videoId}`);
-      
-      // If API returns empty, use mock data
-      if (!response.data.comments || response.data.comments.length === 0) {
-        console.log('📦 API returned no comments, using mock data');
-        await mockDelay();
-        const comments = getMockCommentsByVideo(videoId);
-        return {
-          comments,
-          total: comments.length,
-        };
-      }
-      
-      return response.data;
+      const res = await axiosClient.get<any>(`/comments/video/${videoId}`);
+      const data = res.data;
+      // Normalize various possible shapes
+      const comments = Array.isArray(data)
+        ? data
+        : data?.comments ?? data?.items ?? data?.data ?? [];
+      const total = data?.total ?? data?.total_count ?? data?.count ?? comments.length ?? 0;
+
+      return { comments, total };
     } catch (error) {
       if (shouldUseMock(error)) {
         await mockDelay();

@@ -71,7 +71,7 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* User Info */}
+        {/* User Info
         {user && (
           <div className="mt-8 p-4 border-t border-gray-200">
             <div className="flex items-center gap-3">
@@ -86,7 +86,7 @@ export function Sidebar() {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </aside>
   );

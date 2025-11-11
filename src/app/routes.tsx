@@ -11,6 +11,7 @@ const Login = lazy(() => import('@/pages/auth/Login').then(m => ({ default: m.Lo
 const Register = lazy(() => import('@/pages/auth/Register').then(m => ({ default: m.Register })));
 const Home = lazy(() => import('@/pages/Home').then(m => ({ default: m.Home })));
 const Following = lazy(() => import('@/pages/Following').then(m => ({ default: m.Following })));
+const Bookmarks = lazy(() => import('@/pages/Bookmarks').then(m => ({ default: m.Bookmarks })));
 const Upload = lazy(() => import('@/pages/Upload').then(m => ({ default: m.Upload })));
 const Search = lazy(() => import('@/pages/Search').then(m => ({ default: m.Search })));
 const Profile = lazy(() => import('@/pages/Profile').then(m => ({ default: m.Profile })));
@@ -155,7 +156,7 @@ export function AppRoutes() {
             element={
               <AuthGuard>
                 <AppLayout>
-                  <Following />
+                  <Bookmarks />
                 </AppLayout>
               </AuthGuard>
             }

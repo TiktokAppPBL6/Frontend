@@ -16,7 +16,7 @@ export function Home() {
     isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ['videos', 'feed'],
-    queryFn: ({ pageParam = 1 }) => videosApi.getVideos({ page: pageParam, pageSize: 10 }),
+    queryFn: ({ pageParam = 1 }) => videosApi.getVideos({ page: pageParam, pageSize: 10, sort: 'createdAt', order: 'desc' }),
     getNextPageParam: (lastPage) => {
       return lastPage.hasMore ? lastPage.page + 1 : undefined;
     },

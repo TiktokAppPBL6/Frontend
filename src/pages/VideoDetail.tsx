@@ -1,4 +1,4 @@
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { videosApi } from '@/api/videos.api';
@@ -17,11 +17,13 @@ export function VideoDetail() {
   const { id } = useParams<{ id: string }>();
   const videoId = parseInt(id || '0');
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const [comment, setComment] = useState('');
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [didScrollToComments, setDidScrollToComments] = useState(false);
 
   const { data: video, isLoading: videoLoading } = useQuery({
     queryKey: ['video', videoId],
@@ -89,6 +91,17 @@ export function VideoDetail() {
 
   const isOwnVideo = currentUser?.id === video?.owner?.id;
 
+  // Smooth scroll to comments when hash present or when requested
+  useEffect(() => {
+    if (location.hash === '#comments' && !didScrollToComments) {
+      const el = document.getElementById('comments');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setDidScrollToComments(true);
+      }
+    }
+  }, [location.hash, didScrollToComments]);
+
   if (videoLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -121,6 +134,15 @@ export function VideoDetail() {
         </Button>
 
         <div className="flex flex-col gap-6">
+          {/** Normalize owner fields for safety (snake_case/camelCase) */}
+          {(() => {
+            const o: any = video.owner || {};
+            (video as any)._ownerId = o.id ?? video.ownerId ?? (video as any).owner_id;
+            (video as any)._ownerUsername = o.username ?? o.user_name ?? '';
+            (video as any)._ownerFullName = o.fullName ?? o.full_name ?? '';
+            (video as any)._ownerAvatar = getMediaUrl(o.avatarUrl ?? o.avatar_url ?? '');
+            return null;
+          })()}
           {/* Video Player với Actions overlay */}
           <div className="relative bg-black rounded-2xl overflow-hidden shadow-xl max-w-[600px] mx-auto w-full">
             <video
@@ -133,7 +155,17 @@ export function VideoDetail() {
             
             {/* Video Actions - Right Side */}
             <div className="absolute right-4 bottom-20 pointer-events-auto">
-              <VideoActions video={video} vertical={true} />
+              <VideoActions
+                video={video}
+                vertical={true}
+                onCommentClick={() => {
+                  const el = document.getElementById('comments');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    setDidScrollToComments(true);
+                  }
+                }}
+              />
             </div>
           </div>
 
@@ -141,15 +173,15 @@ export function VideoDetail() {
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 max-w-[600px] mx-auto w-full">
             {/* Avatar + User Info + Follow Button (Same Row) */}
             <div className="flex items-center gap-3 mb-4">
-              <Link to={`/profile/${video.owner?.username}`}>
-                <Avatar src={video.owner?.avatarUrl} alt={video.owner?.username} size="lg" />
+              <Link to={`/user/${(video as any)._ownerId}`}>
+                <Avatar src={(video as any)._ownerAvatar} alt={(video as any)._ownerUsername} size="lg" />
               </Link>
               <div className="flex-1 min-w-0">
-                <Link to={`/profile/${video.owner?.username}`}>
+                <Link to={`/user/${(video as any)._ownerId}`}>
                   <h2 className="text-gray-900 font-bold hover:underline text-base truncate">
-                    {video.owner?.fullName || video.owner?.username}
+                    {(video as any)._ownerFullName || (video as any)._ownerUsername}
                   </h2>
-                  <p className="text-gray-500 text-sm truncate">@{video.owner?.username}</p>
+                  <p className="text-gray-500 text-sm truncate">@{(video as any)._ownerUsername}</p>
                 </Link>
               </div>
               {!isOwnVideo && (
@@ -201,7 +233,7 @@ export function VideoDetail() {
           </div>
 
           {/* Comments Section */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 max-w-[600px] mx-auto w-full">
+          <div id="comments" className="bg-white rounded-2xl shadow-sm border border-gray-100 max-w-[600px] mx-auto w-full">
             <div className="p-4 border-b border-gray-100">
               <h3 className="text-gray-900 font-bold text-base">
                 Bình luận ({commentsData?.total || 0})
@@ -209,18 +241,30 @@ export function VideoDetail() {
             </div>
 
             <div className="p-4 max-h-[400px] overflow-y-auto space-y-4">
-              {commentsData?.comments.map((comment: any) => (
+              {commentsData?.comments.map((comment: any) => {
+                const u = comment.user || {};
+                const userId = comment.userId ?? comment.user_id ?? u.id;
+                const username = comment.username ?? u.username ?? u.user_name ?? 'user';
+                const fullName = comment.fullName ?? u.fullName ?? u.full_name ?? '';
+                const avatar = getMediaUrl(comment.avatarUrl ?? u.avatarUrl ?? u.avatar_url ?? '');
+                return (
                 <div key={comment.id} className="flex gap-3">
-                  <Avatar src={comment.user?.avatarUrl} alt={comment.user?.username} size="sm" />
-                  <div className="flex-1">
-                    <p className="text-gray-900 text-sm font-semibold">
-                      {comment.user?.username}
-                    </p>
-                    <p className="text-gray-700 text-sm mt-1">{comment.content}</p>
+                  <Link to={`/user/${userId}`}>
+                    <Avatar src={avatar} alt={username} size="sm" />
+                  </Link>
+                  <div className="flex-1 min-w-0">
+                    <Link to={`/user/${userId}`} className="hover:underline">
+                      <p className="text-gray-900 text-sm font-semibold truncate">
+                        {fullName || username}
+                      </p>
+                    </Link>
+                    <p className="text-gray-500 text-xs truncate">@{username}</p>
+                    <p className="text-gray-700 text-sm mt-1 break-words">{comment.content}</p>
                     <p className="text-gray-400 text-xs mt-1">{formatDate(comment.createdAt)}</p>
                   </div>
                 </div>
-              ))}
+                );
+              })}
 
               {!commentsData?.comments.length && (
                 <p className="text-gray-400 text-center py-12">Chưa có bình luận nào</p>

@@ -1,198 +1,188 @@
-import { useState, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { useAuthStore } from '@/app/store/auth';
-import { usersApi } from '@/api/users.api';
-import { Button } from '@/components/ui/button';
-import { FormInput } from '@/components/common/FormInput';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar } from '@/components/common/Avatar';
-import { Camera } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
 
+type SectionKey = 'account' | 'privacy' | 'notifications' | 'language' | 'security';
+
 export function Settings() {
-  const { user, updateUser } = useAuthStore();
-  const [formData, setFormData] = useState({
-    fullName: '',
-    username: '',
-  });
-  const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  // Load user data when component mounts or user changes
-  useEffect(() => {
-    if (user) {
-      setFormData({
-        fullName: user.fullName || '',
-        username: user.username || '',
-      });
-    }
-  }, [user]);
-
-  const updateMutation = useMutation({
-    mutationFn: async () => {
-      let result = user;
-      
-      // POST /users/me/avatar - Upload avatar first if selected
-      if (selectedAvatar) {
-        console.log('📤 POST /users/me/avatar - Uploading avatar...');
-        result = await usersApi.uploadAvatar(selectedAvatar);
-      }
-      
-      // PUT /users/me - Update profile info if changed
-      const hasProfileChanges = 
-        formData.fullName !== user?.fullName || 
-        formData.username !== user?.username;
-      
-      if (hasProfileChanges) {
-        console.log('📝 PUT /users/me - Updating profile info...');
-        result = await usersApi.updateMe(formData);
-      }
-      
-      return result;
+  const [active, setActive] = useState<SectionKey>('account');
+  const [settings, setSettings] = useState({
+    privacy: {
+      privateAccount: false,
+      allowComments: true,
+      allowDuet: true,
     },
-    onSuccess: (updatedUser) => {
-      if (updatedUser) {
-        updateUser(updatedUser);
-      }
-      toast.success('Đã cập nhật hồ sơ');
-      // Clear preview after successful upload
-      setSelectedAvatar(null);
-      setPreviewUrl(null);
+    notifications: {
+      likes: true,
+      comments: true,
+      newFollowers: true,
+      mentions: true,
     },
-    onError: (error: any) => {
-      console.error('Update failed:', error.response?.data || error.message);
-      toast.error(error.response?.data?.detail || 'Không thể cập nhật hồ sơ');
+    language: {
+      locale: 'vi-VN',
+      contentLanguage: 'vi',
+    },
+    security: {
+      twoFactor: false,
+      loginAlerts: true,
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateMutation.mutate();
-  };
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        toast.error('Vui lòng chọn file ảnh');
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('File ảnh quá lớn (tối đa 5MB)');
-        return;
-      }
-      
-      // Create preview URL
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      setSelectedAvatar(file);
-      toast.success('Ảnh đã được chọn. Nhấn "Lưu thay đổi" để cập nhật.');
-    }
-  };
-
-  // Cleanup preview URL on unmount
   useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
+    const raw = localStorage.getItem('app.settings');
+    if (raw) {
+      try { setSettings(JSON.parse(raw)); } catch {}
+    }
+  }, []);
+
+  const save = () => {
+    localStorage.setItem('app.settings', JSON.stringify(settings));
+    toast.success('Đã lưu cài đặt');
+  };
 
   return (
     <div className="min-h-screen bg-white pt-20 pb-8">
-      <div className="container mx-auto max-w-2xl px-4">
+      <div className="container mx-auto max-w-5xl px-4">
         <h1 className="text-2xl font-bold mb-6">Cài đặt</h1>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Sidebar */}
+          <div className="md:col-span-1">
+            <Card>
+              <CardContent className="p-0">
+                {([
+                  ['account','Tài khoản'],
+                  ['privacy','Quyền riêng tư'],
+                  ['notifications','Thông báo'],
+                  ['language','Ngôn ngữ & Khu vực'],
+                  ['security','Bảo mật'],
+                ] as [SectionKey,string][]).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setActive(key)}
+                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 ${active===key?'border-l-2 border-[#FE2C55] bg-gray-50 font-medium':''}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Ảnh đại diện</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-6">
-              <div className="relative">
-                <Avatar 
-                  src={previewUrl || user?.avatarUrl} 
-                  alt={user?.username} 
-                  size="xl" 
-                  className="h-24 w-24" 
-                />
-                {previewUrl && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white" 
-                    title="Ảnh mới đã chọn"
-                  />
-                )}
-                <label
-                  htmlFor="avatar-upload"
-                  className="absolute bottom-0 right-0 p-2 bg-[#FE2C55] rounded-full cursor-pointer hover:bg-[#FE2C55]/90 transition-colors"
-                >
-                  <Camera className="h-4 w-4 text-white" />
-                  <input
-                    type="file"
-                    id="avatar-upload"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                    className="hidden"
-                    disabled={updateMutation.isPending}
-                  />
-                </label>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-2">
-                  Click vào biểu tượng camera để thay đổi ảnh đại diện
-                </p>
-                <p className="text-xs text-gray-500">
-                  Định dạng: JPG, PNG. Kích thước tối đa: 5MB
-                </p>
-                {selectedAvatar && (
-                  <p className="text-xs text-green-600 mt-2 font-medium">
-                    ✓ Đã chọn: {selectedAvatar.name}
-                  </p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Content */}
+          <div className="md:col-span-3 space-y-6">
+            {active === 'account' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Thông tin tài khoản</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-600">
+                  Chỉnh sửa hồ sơ đã được chuyển vào trang Hồ sơ. Vào Hồ sơ và bấm "Chỉnh sửa hồ sơ" để cập nhật tên, username và ảnh.
+                </CardContent>
+              </Card>
+            )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Thông tin cá nhân</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <FormInput
-                label="Tên hiển thị"
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                placeholder="Nhập tên của bạn"
-                disabled={updateMutation.isPending}
-              />
+            {active === 'privacy' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quyền riêng tư</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <label className="flex items-center justify-between">
+                    <span>Tài khoản riêng tư</span>
+                    <input type="checkbox" checked={settings.privacy.privateAccount} onChange={(e)=>setSettings(s=>({
+                      ...s, privacy:{...s.privacy, privateAccount:e.target.checked}
+                    }))} />
+                  </label>
+                  <label className="flex items-center justify-between">
+                    <span>Cho phép bình luận</span>
+                    <input type="checkbox" checked={settings.privacy.allowComments} onChange={(e)=>setSettings(s=>({
+                      ...s, privacy:{...s.privacy, allowComments:e.target.checked}
+                    }))} />
+                  </label>
+                  <label className="flex items-center justify-between">
+                    <span>Cho phép Duet</span>
+                    <input type="checkbox" checked={settings.privacy.allowDuet} onChange={(e)=>setSettings(s=>({
+                      ...s, privacy:{...s.privacy, allowDuet:e.target.checked}
+                    }))} />
+                  </label>
+                  <Button onClick={save}>Lưu cài đặt</Button>
+                </CardContent>
+              </Card>
+            )}
 
-              <FormInput
-                label="Tên người dùng"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                placeholder="username"
-                disabled={updateMutation.isPending}
-              />
+            {active === 'notifications' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Thông báo</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {(['likes','comments','newFollowers','mentions'] as (keyof typeof settings.notifications)[]).map((k)=> (
+                    <label key={k} className="flex items-center justify-between">
+                      <span>{k==='likes'?'Lượt thích':k==='comments'?'Bình luận':k==='newFollowers'?'Người theo dõi mới':'Nhắc đến bạn'}</span>
+                      <input type="checkbox" checked={settings.notifications[k]} onChange={(e)=>setSettings(s=>({
+                        ...s, notifications:{...s.notifications, [k]: e.target.checked}
+                      }))} />
+                    </label>
+                  ))}
+                  <Button onClick={save}>Lưu cài đặt</Button>
+                </CardContent>
+              </Card>
+            )}
 
-              <FormInput
-                label="Email"
-                value={user?.email || ''}
-                disabled
-                className="bg-gray-100"
-              />
+            {active === 'language' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Ngôn ngữ & Khu vực</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="mr-4">Ngôn ngữ giao diện</label>
+                    <select className="border rounded px-3 py-2" value={settings.language.locale} onChange={(e)=>setSettings(s=>({
+                      ...s, language:{...s.language, locale:e.target.value}
+                    }))}>
+                      <option value="vi-VN">Tiếng Việt</option>
+                      <option value="en-US">English</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label className="mr-4">Ngôn ngữ nội dung</label>
+                    <select className="border rounded px-3 py-2" value={settings.language.contentLanguage} onChange={(e)=>setSettings(s=>({
+                      ...s, language:{...s.language, contentLanguage:e.target.value}
+                    }))}>
+                      <option value="vi">Tiếng Việt</option>
+                      <option value="en">English</option>
+                    </select>
+                  </div>
+                  <Button onClick={save}>Lưu cài đặt</Button>
+                </CardContent>
+              </Card>
+            )}
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={updateMutation.isPending}
-              >
-                {updateMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            {active === 'security' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Bảo mật</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <label className="flex items-center justify-between">
+                    <span>Bật xác thực 2 bước</span>
+                    <input type="checkbox" checked={settings.security.twoFactor} onChange={(e)=>setSettings(s=>({
+                      ...s, security:{...s.security, twoFactor:e.target.checked}
+                    }))} />
+                  </label>
+                  <label className="flex items-center justify-between">
+                    <span>Thông báo đăng nhập mới</span>
+                    <input type="checkbox" checked={settings.security.loginAlerts} onChange={(e)=>setSettings(s=>({
+                      ...s, security:{...s.security, loginAlerts:e.target.checked}
+                    }))} />
+                  </label>
+                  <Button onClick={save}>Lưu cài đặt</Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -86,11 +86,11 @@ export function Register() {
     <div className="min-h-screen flex items-center justify-center bg-white p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-[#FE2C55] to-[#00F2EA] rounded-2xl flex items-center justify-center">
-              <span className="text-white font-bold text-3xl">T</span>
+            <div className="flex justify-center mb-8">
+            <div className="bg-gradient-to-br from-[#FE2C55] to-[#00F2EA] rounded-3xl flex items-center justify-center shadow-2xl px-10 py-4">
+              <span className="text-white font-bold text-5xl"> Toptop </span>
             </div>
-          </div>
+          </div> 
           <CardTitle className="text-2xl">Đăng ký</CardTitle>
           <CardDescription>Tạo tài khoản để bắt đầu</CardDescription>
         </CardHeader>

@@ -4,7 +4,7 @@ import { mockUsers, mockDelay } from '@/mocks/mockDB';
 
 export const authApi = {
   // Login
-  login: async (data: LoginRequest): Promise<AuthResponse> => {
+  login: async (data: LoginRequest & { _skipRedirect?: boolean }): Promise<AuthResponse> => {
     try {
       // Convert to form-data for OAuth2PasswordRequestForm
       const formData = new URLSearchParams();
@@ -14,7 +14,10 @@ export const authApi = {
       const response = await axiosClient.post<any>('/auth/login', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
+          ...(data._skipRedirect ? { 'X-Skip-Auth-Redirect': '1' } : {}),
         },
+        // Also attach flag on config root (non-standard) for interceptor convenience
+        ...(data._skipRedirect ? { skipAuthRedirect: true } : {}),
       });
       
       // Normalize response - handle both snake_case and camelCase
@@ -78,5 +81,30 @@ export const authApi = {
   logout: () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
+  },
+  
+  // Verify current password without changing session
+  verifyPassword: async (password: string): Promise<{ valid: boolean }> => {
+    try {
+      const response = await axiosClient.post<{ valid?: boolean; success?: boolean }>(
+        '/auth/verify-password',
+        { password },
+        {
+          headers: { 'X-Skip-Auth-Redirect': '1' },
+        }
+      );
+      const valid = response.data?.valid ?? response.data?.success ?? true;
+      return { valid };
+    } catch (error: any) {
+      if (shouldUseMock(error)) {
+        await mockDelay();
+        return { valid: true };
+      }
+      const status = error?.response?.status;
+      if (status === 401) {
+        return { valid: false };
+      }
+      throw error;
+    }
   },
 };
