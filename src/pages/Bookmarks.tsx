@@ -1,87 +1,108 @@
 import { useQuery } from '@tanstack/react-query';
 import { socialApi } from '@/api/social.api';
-import { VideoCard } from '@/components/profile/VideoCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Bookmark } from 'lucide-react';
-import { useState } from 'react';
-import { EditVideoModal } from '@/components/profile/EditVideoModal';
-import { useAuthStore } from '@/app/store/auth';
+import { Bookmark, Heart, MessageCircle, Play } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { getMediaUrl, formatNumber } from '@/lib/utils';
 
 export function Bookmarks() {
-  const [editingVideo, setEditingVideo] = useState<any>(null);
-  const currentUser = useAuthStore((state) => state.user);
-
   const { data: bookmarksData, isLoading } = useQuery({
     queryKey: ['bookmarks'],
     queryFn: () => socialApi.getMyBookmarks(),
   });
 
-  // Normalize response - handle various API formats
-  const videos = bookmarksData?.videos ?? (bookmarksData as any)?.items ?? (bookmarksData as any)?.data ?? [];
-  const total = bookmarksData?.total ?? (bookmarksData as any)?.total_count ?? (bookmarksData as any)?.count ?? videos.length ?? 0;
+  // API returns array directly or object with videos property
+  const videos = Array.isArray(bookmarksData) 
+    ? bookmarksData 
+    : bookmarksData?.videos ?? (bookmarksData as any)?.items ?? (bookmarksData as any)?.data ?? [];
+  const total = videos.length;
 
   return (
-    <>
-      <div className="min-h-screen bg-white pt-20 pb-8">
-        <div className="container mx-auto max-w-4xl px-4">
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-lg">
-              <Bookmark className="h-6 w-6 fill-current" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Video đã lưu</h1>
-              <p className="text-sm text-gray-500">
-                {total > 0 ? `${total} video` : 'Chưa có video nào'}
-              </p>
-            </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto max-w-6xl pt-20 pb-8 px-4">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FE2C55] to-[#F50057] text-white shadow-lg">
+            <Bookmark className="h-7 w-7 fill-current" />
           </div>
-
-          {/* Videos Grid */}
-          {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {[...Array(8)].map((_, i) => (
-                <Skeleton key={i} className="aspect-[9/16]" />
-              ))}
-            </div>
-          ) : videos && videos.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {videos.map((video: any) => {
-                // Check if this is user's own video
-                const isOwnVideo = currentUser?.id === (video.ownerId ?? video.owner_id ?? video.userId ?? video.user_id);
-                return (
-                  <VideoCard
-                    key={video.id}
-                    video={video}
-                    isOwnVideo={isOwnVideo}
-                    onEdit={setEditingVideo}
-                  />
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-20">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-6">
-                <Bookmark className="h-10 w-10 text-gray-400" />
-              </div>
-              <p className="text-xl text-gray-900 font-semibold mb-2">
-                Chưa có video đã lưu
-              </p>
-              <p className="text-gray-500">
-                Nhấn vào biểu tượng dấu trang để lưu video yêu thích của bạn
-              </p>
-            </div>
-          )}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Video đã lưu</h1>
+            <p className="text-sm text-gray-600 mt-1">
+              {total > 0 ? `${total} video đã đánh dấu` : 'Chưa có video nào'}
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Edit Video Modal */}
-      {editingVideo && (
-        <EditVideoModal
-          video={editingVideo}
-          onClose={() => setEditingVideo(null)}
-        />
-      )}
-    </>
+        {/* Content */}
+        {isLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {[...Array(10)].map((_, i) => (
+              <Skeleton key={i} className="aspect-[9/16] rounded-lg" />
+            ))}
+          </div>
+        ) : videos && videos.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {videos.map((video: any) => (
+              <Link
+                key={video.id}
+                to={`/video/${video.id}`}
+                className="group relative aspect-[9/16] rounded-lg overflow-hidden bg-gray-900 hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]"
+              >
+                {/* Thumbnail */}
+                <img
+                  src={getMediaUrl(video.thumbUrl ?? video.thumb_url)}
+                  alt={video.title}
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* Play Icon Overlay */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Play className="h-12 w-12 text-white fill-white" />
+                  </div>
+                </div>
+
+                {/* Stats Overlay - Bottom */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3">
+                  <p className="text-white text-sm font-medium line-clamp-2 mb-2">
+                    {video.title}
+                  </p>
+                  <div className="flex items-center gap-3 text-white text-xs">
+                    <div className="flex items-center gap-1">
+                      <Heart className="h-3.5 w-3.5 fill-current" />
+                      <span>{formatNumber(video.likes_count ?? video.likesCount ?? 0)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      <span>{formatNumber(video.comments_count ?? video.commentsCount ?? 0)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bookmark Badge - Top Right */}
+                <div className="absolute top-2 right-2 bg-[#FE2C55] text-white p-1.5 rounded-full shadow-lg">
+                  <Bookmark className="h-3.5 w-3.5 fill-current" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-32">
+            <div className="mb-6">
+              <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-to-br from-gray-100 to-gray-200 mb-4">
+                <Bookmark className="h-12 w-12 text-gray-400" />
+              </div>
+            </div>
+            <p className="text-gray-900 text-2xl font-bold mb-3">
+              Chưa có video đã lưu
+            </p>
+            <p className="text-gray-500 text-base max-w-md mx-auto">
+              Các video bạn đánh dấu sẽ xuất hiện ở đây.<br />
+              Nhấn vào icon bookmark khi xem video để lưu lại.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

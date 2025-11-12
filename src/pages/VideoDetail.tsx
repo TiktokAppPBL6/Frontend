@@ -9,7 +9,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Send } from 'lucide-react';
-import { formatDate, getMediaUrl } from '@/lib/utils';
+import { formatDate, getMediaUrl, getAvatarUrl } from '@/lib/utils';
 import { useAuthStore } from '@/app/store/auth';
 import toast from 'react-hot-toast';
 
@@ -140,7 +140,7 @@ export function VideoDetail() {
             (video as any)._ownerId = o.id ?? video.ownerId ?? (video as any).owner_id;
             (video as any)._ownerUsername = o.username ?? o.user_name ?? '';
             (video as any)._ownerFullName = o.fullName ?? o.full_name ?? '';
-            (video as any)._ownerAvatar = getMediaUrl(o.avatarUrl ?? o.avatar_url ?? '');
+            (video as any)._ownerAvatar = getAvatarUrl(o.avatarUrl ?? o.avatar_url);
             return null;
           })()}
           {/* Video Player với Actions overlay */}
@@ -246,7 +246,7 @@ export function VideoDetail() {
                 const userId = comment.userId ?? comment.user_id ?? u.id;
                 const username = comment.username ?? u.username ?? u.user_name ?? 'user';
                 const fullName = comment.fullName ?? u.fullName ?? u.full_name ?? '';
-                const avatar = getMediaUrl(comment.avatarUrl ?? u.avatarUrl ?? u.avatar_url ?? '');
+                const avatar = getAvatarUrl(comment.avatarUrl ?? u.avatarUrl ?? u.avatar_url);
                 return (
                 <div key={comment.id} className="flex gap-3">
                   <Link to={`/user/${userId}`}>

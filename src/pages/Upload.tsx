@@ -45,9 +45,31 @@ export function Upload() {
         return;
       }
 
-      setFile(selectedFile);
-      setPreview(URL.createObjectURL(selectedFile));
-      setErrors({});
+      // Validate video duration (max 120 seconds)
+      const videoUrl = URL.createObjectURL(selectedFile);
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(videoUrl);
+        
+        if (video.duration > 120) {
+          setErrors({ file: 'Video quá dài. Độ dài tối đa 120 giây (2 phút)' });
+          return;
+        }
+
+        // All validations passed
+        setFile(selectedFile);
+        setPreview(URL.createObjectURL(selectedFile));
+        setErrors({});
+      };
+
+      video.onerror = () => {
+        window.URL.revokeObjectURL(videoUrl);
+        setErrors({ file: 'Không thể đọc thông tin video' });
+      };
+
+      video.src = videoUrl;
     }
   };
 

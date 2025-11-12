@@ -31,7 +31,12 @@ export function formatDate(date: string): string {
 }
 
 // Get full URL for media files (images, videos)
-export function getMediaUrl(url: string | undefined | null): string {
+export function getMediaUrl(url: string | undefined | null, defaultAvatar: boolean = false): string {
+  // If URL is null/empty and it's an avatar request, return default avatar
+  if (!url && defaultAvatar) {
+    return '/avatar.jpg';
+  }
+  
   if (!url) return '';
   
   // If already a full URL (starts with http:// or https://), return as is
@@ -47,6 +52,26 @@ export function getMediaUrl(url: string | undefined | null): string {
   // Otherwise, prepend backend base URL (HTTP server, not file path!)
   const baseUrl = 'http://localhost:8000';
   // Remove leading slash if exists to avoid double slashes
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  return `${baseUrl}${cleanUrl}`;
+}
+
+// Get avatar URL with default fallback
+export function getAvatarUrl(url: string | undefined | null): string {
+  if (!url) return '/avatar.jpg';
+  
+  // If already a full URL (starts with http:// or https://), return as is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // If it's a blob URL (for preview), return as is
+  if (url.startsWith('blob:')) {
+    return url;
+  }
+  
+  // Otherwise, prepend backend base URL
+  const baseUrl = 'http://localhost:8000';
   const cleanUrl = url.startsWith('/') ? url : `/${url}`;
   return `${baseUrl}${cleanUrl}`;
 }

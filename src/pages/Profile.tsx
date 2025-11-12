@@ -5,7 +5,7 @@ import { videosApi } from '@/api/videos.api';
 import { socialApi } from '@/api/social.api';
 import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';
-import { formatNumber, getMediaUrl, cn } from '@/lib/utils';
+import { formatNumber, getAvatarUrl, cn } from '@/lib/utils';
 import { useAuthStore } from '@/app/store/auth';
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
@@ -113,7 +113,7 @@ export function Profile() {
         {/* Profile Header */}
         <div className="bg-white rounded-lg p-8 mb-6 shadow-sm">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-            <Avatar src={getMediaUrl(user.avatarUrl)} alt={user.username} size="xl" className="h-24 w-24" />
+            <Avatar src={getAvatarUrl(user.avatarUrl)} alt={user.username} size="xl" className="h-24 w-24" />
             
             <div className="flex-1 text-center md:text-left">
               <h1 className="text-2xl font-bold mb-1">

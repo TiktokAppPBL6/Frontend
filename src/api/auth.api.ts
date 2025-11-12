@@ -107,4 +107,20 @@ export const authApi = {
       throw error;
     }
   },
+  
+  // Change password
+  changePassword: async (data: { currentPassword: string; newPassword: string }): Promise<void> => {
+    try {
+      await axiosClient.post('/auth/change-password', {
+        current_password: data.currentPassword,
+        new_password: data.newPassword,
+      });
+    } catch (error) {
+      if (shouldUseMock(error)) {
+        await mockDelay();
+        return;
+      }
+      throw error;
+    }
+  },
 };

@@ -4,7 +4,7 @@ import { socialApi } from '@/api/social.api';
 import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { getMediaUrl, cn } from '@/lib/utils';
+import { getAvatarUrl, cn } from '@/lib/utils';
 import { useAuthStore } from '@/app/store/auth';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -124,7 +124,7 @@ export function FollowersModal({ userId, initialTab = 'followers', onClose }: Fo
               {users.map((user: any) => {
                 const username = user.username ?? user.user_name ?? '';
                 const fullName = user.fullName ?? user.full_name ?? '';
-                const avatar = getMediaUrl(user.avatarUrl ?? user.avatar_url ?? '');
+                const avatar = getAvatarUrl(user.avatarUrl ?? user.avatar_url);
                 const isFollowing = user.is_following ?? user.isFollowing ?? false;
                 const isCurrentUser = currentUser?.id === user.id;
 

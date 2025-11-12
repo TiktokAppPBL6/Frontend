@@ -89,27 +89,6 @@ export const videosApi = {
       const data = response.data;
       const videos = Array.isArray(data) ? data : data?.videos ?? data?.items ?? data?.data ?? [];
 
-      // If API returns empty, use mock data
-      if (!videos || videos.length === 0) {
-        console.log('📦 Following feed empty, using mock videos');
-        await mockDelay();
-        const page = params?.page || 1;
-        const pageSize = params?.pageSize || 10;
-        const start = (page - 1) * pageSize;
-        const end = start + pageSize;
-        const videosSorted = [...mockVideos].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        const paged = videosSorted.slice(start, end);
-        return {
-          videos: paged,
-          total: mockVideos.length,
-          page,
-          pageSize,
-          hasMore: end < mockVideos.length,
-        };
-      }
-
       // Normalize response
       if (Array.isArray(data)) {
         const page = params?.page || 1;
@@ -228,8 +207,21 @@ export const videosApi = {
   // Search videos
   searchVideos: async (params: SearchParams): Promise<Video[]> => {
     try {
-      const response = await axiosClient.get<Video[]>('/videos/search', { params });
-      return response.data;
+      // Backend expects: q, skip, limit (not query, page, pageSize)
+      const skip = params.page ? (params.page - 1) * (params.pageSize || 20) : 0;
+      const limit = params.pageSize || 20;
+      
+      const response = await axiosClient.get<any>('/videos/search', { 
+        params: {
+          q: params.query,
+          skip,
+          limit
+        }
+      });
+      
+      // Response might be array or object
+      const videos = Array.isArray(response.data) ? response.data : response.data?.videos ?? response.data?.items ?? [];
+      return videos;
     } catch (error) {
       if (shouldUseMock(error)) {
         await mockDelay();

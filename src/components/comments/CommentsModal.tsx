@@ -5,7 +5,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Send } from 'lucide-react';
-import { getMediaUrl, formatDate, cn } from '@/lib/utils';
+import { getAvatarUrl, formatDate, cn } from '@/lib/utils';
 
 interface CommentsModalProps {
   videoId: number;
@@ -61,7 +61,7 @@ export function CommentsModal({ videoId, onClose }: CommentsModalProps) {
               const u = c.user || {};
               const username = c.username ?? u.username ?? u.user_name ?? 'user';
               const fullName = c.fullName ?? c.full_name ?? u.fullName ?? u.full_name ?? '';
-              const avatar = getMediaUrl(c.avatarUrl ?? c.avatar_url ?? u.avatarUrl ?? u.avatar_url ?? '');
+              const avatar = getAvatarUrl(c.avatarUrl ?? c.avatar_url ?? u.avatarUrl ?? u.avatar_url);
               
               return (
                 <div key={c.id} className="flex gap-3 bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow">

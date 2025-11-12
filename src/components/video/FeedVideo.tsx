@@ -4,7 +4,7 @@ import { Video } from '@/types';
 import { VideoActions } from './VideoActions';
 import { useAuthStore } from '@/app/store/auth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { getMediaUrl } from '@/lib/utils';
+import { getMediaUrl, getAvatarUrl } from '@/lib/utils';
 import { CommentsModal } from '@/components/comments/CommentsModal';
 import { socialApi } from '@/api/social.api';
 import toast from 'react-hot-toast';
@@ -30,7 +30,7 @@ export function FeedVideo({ video, isInView = false, onVideoInView }: FeedVideoP
   const ownerId = v.ownerId ?? v.owner_id ?? (v.owner as any)?.id ?? null;
   const ownerUsername: string = v.username ?? v.user_name ?? (v.owner as any)?.username ?? '';
   const ownerFullName: string = v.fullName ?? v.full_name ?? (v.owner as any)?.fullName ?? '';
-  const ownerAvatar: string = getMediaUrl(v.avatarUrl ?? v.avatar_url ?? (v.owner as any)?.avatarUrl ?? '');
+  const ownerAvatar: string = getAvatarUrl(v.avatarUrl ?? v.avatar_url ?? (v.owner as any)?.avatarUrl);
   const isOwnVideo = currentUser?.id === ownerId;
   
   // Follow state from video data
@@ -40,17 +40,21 @@ export function FeedVideo({ video, isInView = false, onVideoInView }: FeedVideoP
 
   const followMutation = useMutation({
     mutationFn: async () => {
-      if (!ownerId) return;
-      if (isFollowing) return socialApi.unfollowUser(ownerId);
-      return socialApi.followUser(ownerId);
+      if (!ownerId) throw new Error('Invalid user ID');
+      if (isFollowing) {
+        await socialApi.unfollowUser(ownerId);
+      } else {
+        await socialApi.followUser(ownerId);
+      }
     },
     onSuccess: () => {
       setIsFollowing((prev) => !prev);
       queryClient.invalidateQueries({ queryKey: ['videos'] });
       if (ownerId) queryClient.invalidateQueries({ queryKey: ['user', ownerId] });
-      toast.success(!isFollowing ? 'Đã theo dõi' : 'Đã bỏ theo dõi');
+      toast.success(isFollowing ? 'Đã bỏ theo dõi' : 'Đã theo dõi');
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Follow error:', error);
       toast.error('Không thể thực hiện hành động này');
     },
   });
