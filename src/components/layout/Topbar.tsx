@@ -26,7 +26,7 @@ export function Topbar() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-[#121212] border-b border-gray-800 z-50">
       {/* Logo - Always visible on left */}
       <Link to="/home" className="fixed left-4 top-2 z-50 lg:left-6">
         <img src="/tiktok.png" alt="TikTok" className="h-10"  />
@@ -38,7 +38,7 @@ export function Topbar() {
 
         {/* Mobile Menu Button */}
         <button
-          className="lg:hidden p-2"
+          className="lg:hidden p-2 text-white"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -52,11 +52,11 @@ export function Topbar() {
               placeholder="Tìm kiếm video, người dùng..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pr-10"
+              className="pr-10 bg-[#1e1e1e] border-gray-700 text-white placeholder:text-gray-500"
             />
             <button
               type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
             >
               <Search className="h-5 w-5" />
             </button>
@@ -72,7 +72,7 @@ export function Topbar() {
             variant="ghost"
             size="icon"
             onClick={handleLogout}
-            className="hidden md:flex"
+            className="hidden md:flex text-white hover:bg-gray-800"
             title="Đăng xuất"
           >
             <LogOut className="h-5 w-5" />
@@ -82,13 +82,13 @@ export function Topbar() {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 top-16 bg-white z-40 overflow-y-auto">
+        <div className="lg:hidden fixed inset-0 top-16 bg-[#121212] z-40 overflow-y-auto">
           <nav className="p-4">
             {/* Mobile menu items would go here */}
             <Button
               variant="outline"
               onClick={handleLogout}
-              className="w-full justify-start gap-2"
+              className="w-full justify-start gap-2 bg-transparent border-gray-700 text-white hover:bg-gray-800"
             >
               <LogOut className="h-5 w-5" />
               Đăng xuất

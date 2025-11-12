@@ -37,7 +37,7 @@ export function Search() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 pb-8">
+    <div className="min-h-screen bg-[#121212] pt-20 pb-8">
       <div className="container mx-auto max-w-6xl px-4">
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="mb-8">
@@ -47,11 +47,11 @@ export function Search() {
               placeholder="Tìm kiếm video, người dùng..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="pr-12 h-12 text-lg bg-white"
+              className="pr-12 h-12 text-lg bg-[#1e1e1e] border-gray-700 text-white placeholder:text-gray-500"
             />
             <button
               type="submit"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FE2C55]"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FE2C55] transition-colors"
             >
               <SearchIcon className="h-6 w-6" />
             </button>
@@ -61,13 +61,13 @@ export function Search() {
         {query && (
           <>
             {/* Tabs */}
-            <div className="flex gap-8 border-b border-gray-200 mb-6 bg-white rounded-t-lg px-4">
+            <div className="flex gap-8 border-b border-gray-800 mb-6 bg-[#1e1e1e] rounded-t-lg px-4">
               <button
                 onClick={() => setActiveTab('videos')}
                 className={`pb-4 pt-4 px-2 font-semibold transition-colors ${
                   activeTab === 'videos'
                     ? 'text-[#FE2C55] border-b-2 border-[#FE2C55]'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-gray-400 hover:text-gray-300'
                 }`}
               >
                 <Video className="inline h-5 w-5 mr-2" />
@@ -78,7 +78,7 @@ export function Search() {
                 className={`pb-4 pt-4 px-2 font-semibold transition-colors ${
                   activeTab === 'users'
                     ? 'text-[#FE2C55] border-b-2 border-[#FE2C55]'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-gray-400 hover:text-gray-300'
                 }`}
               >
                 <User className="inline h-5 w-5 mr-2" />
@@ -87,10 +87,10 @@ export function Search() {
             </div>
 
             {/* Results */}
-            <div className="bg-white rounded-b-lg p-4">{activeTab === 'users' && (
+            <div className="bg-[#1e1e1e] rounded-b-lg p-4 border border-gray-800 border-t-0">{activeTab === 'users' && (
                 <div className="space-y-3">
                   {usersLoading ? (
-                    <div className="text-center py-8 text-gray-500">Đang tìm kiếm...</div>
+                    <div className="text-center py-8 text-gray-400">Đang tìm kiếm...</div>
                   ) : users && users.length > 0 ? (
                     users.map((user: any) => {
                       // Normalize user fields
@@ -101,17 +101,17 @@ export function Search() {
                         <Link
                           key={user.id}
                           to={`/user/${user.id}`}
-                          className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors border border-gray-100"
+                          className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-800 transition-colors border border-gray-700"
                         >
                           <Avatar src={getAvatarUrl(user.avatarUrl)} alt={user.username} size="lg" />
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-lg truncate">
+                            <h3 className="font-semibold text-lg truncate text-white">
                               {user.fullName || user.username}
                             </h3>
-                            <p className="text-gray-500 text-sm">@{user.username}</p>
-                            <div className="flex items-center gap-4 text-gray-400 text-sm mt-1">
+                            <p className="text-gray-400 text-sm">@{user.username}</p>
+                            <div className="flex items-center gap-4 text-gray-500 text-sm mt-1">
                               <span>{formatNumber(followersCount)} người theo dõi</span>
-                              <span className="text-gray-300">•</span>
+                              <span className="text-gray-600">•</span>
                               <span>{formatNumber(videosCount)} video</span>
                             </div>
                           </div>
@@ -121,14 +121,14 @@ export function Search() {
                   ) : (
                     <div className="text-center py-32">
                       <div className="mb-6">
-                        <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-to-br from-gray-100 to-gray-200 mb-4">
-                          <User className="h-12 w-12 text-gray-400" />
+                        <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gray-800 mb-4">
+                          <User className="h-12 w-12 text-gray-500" />
                         </div>
                       </div>
-                      <p className="text-gray-900 text-2xl font-bold mb-3">
+                      <p className="text-white text-2xl font-bold mb-3">
                         Không tìm thấy người dùng
                       </p>
-                      <p className="text-gray-500 text-base">
+                      <p className="text-gray-400 text-base">
                         Thử tìm kiếm với từ khóa khác
                       </p>
                     </div>
@@ -201,14 +201,14 @@ export function Search() {
                   ) : (
                     <div className="text-center py-32">
                       <div className="mb-6">
-                        <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-to-br from-gray-100 to-gray-200 mb-4">
-                          <Video className="h-12 w-12 text-gray-400" />
+                        <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gray-800 mb-4">
+                          <Video className="h-12 w-12 text-gray-500" />
                         </div>
                       </div>
-                      <p className="text-gray-900 text-2xl font-bold mb-3">
+                      <p className="text-white text-2xl font-bold mb-3">
                         Không tìm thấy video
                       </p>
-                      <p className="text-gray-500 text-base">
+                      <p className="text-gray-400 text-base">
                         Thử tìm kiếm với từ khóa khác
                       </p>
                     </div>
@@ -221,8 +221,8 @@ export function Search() {
 
         {!query && (
           <div className="text-center py-20">
-            <SearchIcon className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-            <p className="text-gray-500 text-lg">Nhập từ khóa để tìm kiếm</p>
+            <SearchIcon className="h-16 w-16 mx-auto text-gray-600 mb-4" />
+            <p className="text-gray-400 text-lg">Nhập từ khóa để tìm kiếm</p>
           </div>
         )}
       </div>

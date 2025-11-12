@@ -35,7 +35,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 overflow-y-auto z-40 hidden lg:block">
+    <aside className="fixed left-0 top-0 h-full w-64 bg-[#121212] border-r border-gray-800 overflow-y-auto z-40 hidden lg:block">
       <div className="p-4">
         {/* Logo */}
         <Link to="/home" className="flex items-center gap-2 mb-8">
@@ -61,7 +61,7 @@ export function Sidebar() {
                   'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
                   active
                     ? 'bg-[#FE2C55]/10 text-[#FE2C55] font-semibold'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    : 'text-gray-300 hover:bg-gray-800'
                 )}
               >
                 <Icon className="h-6 w-6" />

@@ -22,55 +22,54 @@ export function Following() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="container mx-auto max-w-[600px] pt-20 pb-8">
-        {isLoading ? (
-          <div className="space-y-8">
-            <VideoSkeleton />
-            <VideoSkeleton />
-          </div>
-        ) : videosData?.videos && videosData.videos.length > 0 ? (
-          <div className="snap-y snap-mandatory">
-            {videosData.videos.map((video) => (
+    <div className="h-screen overflow-y-scroll snap-y snap-mandatory bg-black">
+      {isLoading ? (
+        <div className="space-y-8 p-4">
+          <VideoSkeleton />
+          <VideoSkeleton />
+        </div>
+      ) : videosData?.videos && videosData.videos.length > 0 ? (
+        <div className="w-full">
+          {videosData.videos.map((video) => (
+            <div key={video.id} className="h-screen snap-start snap-always">
               <FeedVideo
-                key={video.id}
                 video={video}
                 isInView={currentVideoId === video.id}
                 onVideoInView={handleVideoInView}
               />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] px-4">
-            <div className="text-center max-w-sm">
-              {/* Icon */}
-              <div className="mb-6">
-                <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-gray-100">
-                  <UserPlus className="w-16 h-16 text-gray-400" strokeWidth={1.5} />
-                </div>
-              </div>
-
-              {/* Title */}
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">
-                Chưa có video
-              </h2>
-
-              {/* Description */}
-              <p className="text-gray-500 text-base mb-8 leading-relaxed">
-                Video từ những tài khoản bạn theo dõi sẽ xuất hiện tại đây
-              </p>
-
-              {/* CTA Button */}
-              <Link 
-                to="/home"
-                className="inline-flex items-center justify-center px-8 py-3 bg-[#FE2C55] hover:bg-[#FE2C55]/90 text-white font-semibold rounded-lg transition-colors"
-              >
-                Khám phá video
-              </Link>
             </div>
+          ))}
+        </div>
+      ) : (
+        <div className="h-screen flex flex-col items-center justify-center px-4">
+          <div className="text-center max-w-sm">
+            {/* Icon */}
+            <div className="mb-6">
+              <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-gray-800">
+                <UserPlus className="w-16 h-16 text-gray-400" strokeWidth={1.5} />
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-2xl font-bold text-white mb-3">
+              Chưa có video
+            </h2>
+
+            {/* Description */}
+            <p className="text-gray-400 text-base mb-8 leading-relaxed">
+              Video từ những tài khoản bạn theo dõi sẽ xuất hiện tại đây
+            </p>
+
+            {/* CTA Button */}
+            <Link 
+              to="/home"
+              className="inline-flex items-center justify-center px-8 py-3 bg-[#FE2C55] hover:bg-[#FE2C55]/90 text-white font-semibold rounded-lg transition-colors"
+            >
+              Khám phá video
+            </Link>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

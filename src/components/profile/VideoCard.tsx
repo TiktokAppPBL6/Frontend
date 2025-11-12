@@ -42,7 +42,7 @@ export function VideoCard({ video, isOwnVideo = false, onEdit }: VideoCardProps)
   const isPrivate = video.privacy === 'private' || video.is_private === true;
 
   return (
-    <div className="group relative aspect-[9/16] rounded-xl overflow-hidden bg-gray-100 hover:shadow-xl transition-all">
+    <div className="group relative aspect-[9/16] rounded-lg overflow-hidden bg-[#1e1e1e] hover:opacity-90 transition-all cursor-pointer">
       <Link to={`/video/${video.id}`} className="block w-full h-full">
         <img
           src={getMediaUrl(video.thumbUrl ?? video.thumb_url)}
@@ -52,27 +52,16 @@ export function VideoCard({ video, isOwnVideo = false, onEdit }: VideoCardProps)
         
         {/* Privacy Badge */}
         {isPrivate && (
-          <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
+          <div className="absolute top-2 left-2 bg-black/80 backdrop-blur-sm text-white px-2 py-1 rounded text-xs flex items-center gap-1">
             <Lock className="h-3 w-3" />
-            <span>Riêng tư</span>
           </div>
         )}
 
-        {/* Overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        
-        {/* Video Info */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform">
-          <p className="font-semibold text-sm line-clamp-2 mb-1">{video.title}</p>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1">
-              <span className="text-white/90">❤️</span>
-              {formatNumber(video.likes_count ?? video.likesCount ?? 0)}
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="text-white/90">💬</span>
-              {formatNumber(video.comments_count ?? video.commentsCount ?? 0)}
-            </span>
+        {/* Views Count - Bottom */}
+        <div className="absolute bottom-0 left-0 right-0 p-2">
+          <div className="flex items-center gap-1 text-white text-xs font-semibold">
+            <span className="text-white/90">▶</span>
+            <span>{formatNumber(video.likes_count ?? video.likesCount ?? 0)}</span>
           </div>
         </div>
       </Link>
@@ -93,13 +82,13 @@ export function VideoCard({ video, isOwnVideo = false, onEdit }: VideoCardProps)
           {showMenu && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-              <div className="absolute right-0 top-10 bg-white rounded-lg shadow-2xl border border-gray-200 min-w-[160px] py-2 z-20 overflow-hidden">
+              <div className="absolute right-0 top-10 bg-[#1e1e1e] rounded-lg shadow-2xl border border-gray-700 min-w-[160px] py-2 z-20 overflow-hidden">
                 <button
                   onClick={(e) => {
                     e.preventDefault();
                     handleEdit();
                   }}
-                  className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
                 >
                   <Edit className="h-4 w-4" />
                   <span>Chỉnh sửa</span>
@@ -110,7 +99,7 @@ export function VideoCard({ video, isOwnVideo = false, onEdit }: VideoCardProps)
                     handleDelete();
                   }}
                   disabled={deleteMutation.isPending}
-                  className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                  className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
                 >
                   <Trash2 className="h-4 w-4" />
                   <span>{deleteMutation.isPending ? 'Đang xóa...' : 'Xóa'}</span>

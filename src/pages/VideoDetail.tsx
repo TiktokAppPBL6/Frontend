@@ -122,12 +122,12 @@ export function VideoDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-white pt-20 pb-8">
+    <div className="min-h-screen bg-[#121212] pt-20 pb-8">
       <div className="container mx-auto max-w-5xl px-4">
         <Button
           variant="ghost"
           onClick={() => navigate(-1)}
-          className="text-gray-900 hover:bg-gray-100 mb-6"
+          className="text-white hover:bg-gray-800 mb-6"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
           Quay lại
@@ -170,7 +170,7 @@ export function VideoDetail() {
           </div>
 
           {/* Video Info Section */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 max-w-[600px] mx-auto w-full">
+          <div className="bg-[#1e1e1e] rounded-2xl p-6 shadow-sm border border-gray-800 max-w-[600px] mx-auto w-full">
             {/* Avatar + User Info + Follow Button (Same Row) */}
             <div className="flex items-center gap-3 mb-4">
               <Link to={`/user/${(video as any)._ownerId}`}>
@@ -178,10 +178,10 @@ export function VideoDetail() {
               </Link>
               <div className="flex-1 min-w-0">
                 <Link to={`/user/${(video as any)._ownerId}`}>
-                  <h2 className="text-gray-900 font-bold hover:underline text-base truncate">
+                  <h2 className="text-white font-bold hover:underline text-base truncate">
                     {(video as any)._ownerFullName || (video as any)._ownerUsername}
                   </h2>
-                  <p className="text-gray-500 text-sm truncate">@{(video as any)._ownerUsername}</p>
+                  <p className="text-gray-400 text-sm truncate">@{(video as any)._ownerUsername}</p>
                 </Link>
               </div>
               {!isOwnVideo && (
@@ -190,7 +190,7 @@ export function VideoDetail() {
                   disabled={followMutation.isPending}
                   className={
                     isFollowing
-                      ? 'bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold px-6 rounded-lg'
+                      ? 'bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 rounded-lg'
                       : 'bg-[#FE2C55] hover:bg-[#FE2C55]/90 text-white font-semibold px-6 rounded-lg'
                   }
                 >
@@ -200,11 +200,11 @@ export function VideoDetail() {
             </div>
 
             {/* Video Title */}
-            <h1 className="text-gray-900 text-lg font-bold mb-2">{video.title}</h1>
+            <h1 className="text-white text-lg font-bold mb-2">{video.title}</h1>
 
             {/* Video Description with "See more" */}
             {video.description && (
-              <div className="text-gray-700 text-sm leading-relaxed mb-3">
+              <div className="text-gray-300 text-sm leading-relaxed mb-3">
                 {showFullDescription || video.description.length <= 100 ? (
                   <p>{video.description}</p>
                 ) : (
@@ -212,7 +212,7 @@ export function VideoDetail() {
                     {video.description.slice(0, 100)}...{' '}
                     <button
                       onClick={() => setShowFullDescription(true)}
-                      className="text-gray-900 font-semibold hover:underline"
+                      className="text-white font-semibold hover:underline"
                     >
                       xem thêm
                     </button>
@@ -221,7 +221,7 @@ export function VideoDetail() {
                 {showFullDescription && video.description.length > 100 && (
                   <button
                     onClick={() => setShowFullDescription(false)}
-                    className="text-gray-900 font-semibold hover:underline mt-1"
+                    className="text-white font-semibold hover:underline mt-1"
                   >
                     rút gọn
                   </button>
@@ -229,13 +229,13 @@ export function VideoDetail() {
               </div>
             )}
 
-            <p className="text-gray-400 text-xs">{formatDate(video.createdAt)}</p>
+            <p className="text-gray-500 text-xs">{formatDate(video.createdAt)}</p>
           </div>
 
           {/* Comments Section */}
-          <div id="comments" className="bg-white rounded-2xl shadow-sm border border-gray-100 max-w-[600px] mx-auto w-full">
-            <div className="p-4 border-b border-gray-100">
-              <h3 className="text-gray-900 font-bold text-base">
+          <div id="comments" className="bg-[#1e1e1e] rounded-2xl shadow-sm border border-gray-800 max-w-[600px] mx-auto w-full">
+            <div className="p-4 border-b border-gray-800">
+              <h3 className="text-white font-bold text-base">
                 Bình luận ({commentsData?.total || 0})
               </h3>
             </div>
@@ -254,13 +254,13 @@ export function VideoDetail() {
                   </Link>
                   <div className="flex-1 min-w-0">
                     <Link to={`/user/${userId}`} className="hover:underline">
-                      <p className="text-gray-900 text-sm font-semibold truncate">
+                      <p className="text-white text-sm font-semibold truncate">
                         {fullName || username}
                       </p>
                     </Link>
-                    <p className="text-gray-500 text-xs truncate">@{username}</p>
-                    <p className="text-gray-700 text-sm mt-1 break-words">{comment.content}</p>
-                    <p className="text-gray-400 text-xs mt-1">{formatDate(comment.createdAt)}</p>
+                    <p className="text-gray-400 text-xs truncate">@{username}</p>
+                    <p className="text-gray-300 text-sm mt-1 break-words">{comment.content}</p>
+                    <p className="text-gray-500 text-xs mt-1">{formatDate(comment.createdAt)}</p>
                   </div>
                 </div>
                 );
@@ -272,13 +272,13 @@ export function VideoDetail() {
             </div>
 
             {/* Comment Input */}
-            <div className="p-4 border-t border-gray-100">
+            <div className="p-4 border-t border-gray-800">
               <form onSubmit={handleCommentSubmit} className="flex gap-2">
                 <Input
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Thêm bình luận..."
-                  className="flex-1 bg-gray-50 border-gray-200"
+                  className="flex-1 bg-[#121212] border-gray-700 text-white placeholder:text-gray-500"
                   disabled={commentMutation.isPending}
                 />
                 <Button

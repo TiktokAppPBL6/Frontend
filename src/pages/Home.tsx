@@ -32,43 +32,42 @@ export function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="container mx-auto max-w-[600px] pt-20 pb-8">
-        {isLoading ? (
-          <div className="space-y-8">
-            <VideoSkeleton />
-            <VideoSkeleton />
-          </div>
-        ) : (
-          <InfiniteScroll
-            onLoadMore={fetchNextPage}
-            hasMore={!!hasNextPage}
-            isLoading={isFetchingNextPage}
-          >
-            <div className="snap-y snap-mandatory">
-              {allVideos.map((video) => (
+    <div className="h-screen overflow-y-scroll snap-y snap-mandatory bg-black">
+      {isLoading ? (
+        <div className="space-y-8 p-4">
+          <VideoSkeleton />
+          <VideoSkeleton />
+        </div>
+      ) : (
+        <InfiniteScroll
+          onLoadMore={fetchNextPage}
+          hasMore={!!hasNextPage}
+          isLoading={isFetchingNextPage}
+        >
+          <div className="w-full">
+            {allVideos.map((video) => (
+              <div key={video.id} className="h-screen snap-start snap-always">
                 <FeedVideo
-                  key={video.id}
                   video={video}
                   isInView={currentVideoId === video.id}
                   onVideoInView={handleVideoInView}
                 />
-              ))}
-            </div>
-            {isFetchingNextPage && (
-              <div className="py-8">
-                <VideoSkeleton />
               </div>
-            )}
-          </InfiniteScroll>
-        )}
-
-        {!isLoading && allVideos.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-gray-600 text-lg">Chưa có video nào</p>
+            ))}
           </div>
-        )}
-      </div>
+          {isFetchingNextPage && (
+            <div className="h-screen snap-start flex items-center justify-center">
+              <VideoSkeleton />
+            </div>
+          )}
+        </InfiniteScroll>
+      )}
+
+      {!isLoading && allVideos.length === 0 && (
+        <div className="h-screen flex items-center justify-center">
+          <p className="text-white text-lg">Chưa có video nào</p>
+        </div>
+      )}
     </div>
   );
 }

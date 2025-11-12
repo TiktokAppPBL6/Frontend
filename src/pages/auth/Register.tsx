@@ -83,16 +83,16 @@ export function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-[#121212] p-4">
+      <Card className="w-full max-w-md bg-[#1e1e1e] border-gray-800">
         <CardHeader className="text-center">
             <div className="flex justify-center mb-8">
             <div className="bg-gradient-to-br from-[#FE2C55] to-[#00F2EA] rounded-3xl flex items-center justify-center shadow-2xl px-10 py-4">
               <span className="text-white font-bold text-5xl"> Toptop </span>
             </div>
           </div> 
-          <CardTitle className="text-2xl">Đăng ký</CardTitle>
-          <CardDescription>Tạo tài khoản để bắt đầu</CardDescription>
+          <CardTitle className="text-2xl text-white">Đăng ký</CardTitle>
+          <CardDescription className="text-gray-400">Tạo tài khoản để bắt đầu</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -154,12 +154,16 @@ export function Register() {
               disabled={isLoading}
             />
             
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full bg-[#FE2C55] hover:bg-[#FE2C55]/90 text-white" 
+              disabled={isLoading}
+            >
               {isLoading ? 'Đang đăng ký...' : 'Đăng ký'}
             </Button>
             
             <div className="text-center text-sm">
-              <span className="text-gray-600">Đã có tài khoản? </span>
+              <span className="text-gray-400">Đã có tài khoản? </span>
               <Link to="/auth/login" className="text-[#FE2C55] hover:underline font-semibold">
                 Đăng nhập
               </Link>

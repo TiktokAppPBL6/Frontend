@@ -65,25 +65,25 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-[#121212] p-4">
+      <Card className="w-full max-w-md bg-[#1e1e1e] border-gray-800">
         <CardHeader className="text-center">
            <div className="flex justify-center mb-8">
             <div className="bg-gradient-to-br from-[#FE2C55] to-[#00F2EA] rounded-3xl flex items-center justify-center shadow-2xl px-10 py-4">
               <span className="text-white font-bold text-5xl"> Toptop </span>
             </div>
           </div> 
-          <CardTitle className="text-2xl">Đăng nhập</CardTitle>
-          <CardDescription>Đăng nhập để khám phá video thú vị</CardDescription>
+          <CardTitle className="text-2xl text-white">Đăng nhập</CardTitle>
+          <CardDescription className="text-gray-400">Đăng nhập để khám phá video thú vị</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {loginError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-                <svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-start gap-2">
+                <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
-                <p className="text-sm text-red-800">{loginError}</p>
+                <p className="text-sm text-red-400">{loginError}</p>
               </div>
             )}
             
@@ -113,12 +113,16 @@ export function Login() {
               disabled={isLoading}
             />
             
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full bg-[#FE2C55] hover:bg-[#FE2C55]/90 text-white" 
+              disabled={isLoading}
+            >
               {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </Button>
             
             <div className="text-center text-sm">
-              <span className="text-gray-600">Chưa có tài khoản? </span>
+              <span className="text-gray-400">Chưa có tài khoản? </span>
               <Link to="/auth/register" className="text-[#FE2C55] hover:underline font-semibold">
                 Đăng ký ngay
               </Link>

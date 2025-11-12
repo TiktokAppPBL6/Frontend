@@ -102,11 +102,11 @@ export function Upload() {
   };
 
   return (
-    <div className="min-h-screen bg-white pt-20 pb-8">
+    <div className="min-h-screen bg-[#121212] pt-20 pb-8">
       <div className="container mx-auto max-w-2xl px-4">
-        <Card>
+        <Card className="bg-[#1e1e1e] border-gray-800">
           <CardHeader>
-            <CardTitle className="text-2xl flex items-center gap-2">
+            <CardTitle className="text-2xl flex items-center gap-2 text-white">
               <UploadIcon className="h-6 w-6" />
               Tải video lên
             </CardTitle>
@@ -115,8 +115,8 @@ export function Upload() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* File Upload */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Video</label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-[#FE2C55] transition-colors">
+                <label className="text-sm font-medium text-gray-300">Video</label>
+                <div className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center hover:border-[#FE2C55] transition-colors bg-[#121212]">
                   {preview ? (
                     <div className="space-y-4">
                       <video
@@ -131,14 +131,15 @@ export function Upload() {
                           setFile(null);
                           setPreview(null);
                         }}
+                        className="bg-transparent border-gray-600 text-white hover:bg-gray-800"
                       >
                         Chọn video khác
                       </Button>
                     </div>
                   ) : (
                     <>
-                      <Video className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                      <p className="text-gray-600 mb-2">Chọn video để tải lên</p>
+                      <Video className="h-12 w-12 mx-auto text-gray-500 mb-4" />
+                      <p className="text-gray-400 mb-2">Chọn video để tải lên</p>
                       <input
                         type="file"
                         accept="video/*"
@@ -149,6 +150,7 @@ export function Upload() {
                       <Button
                         type="button"
                         onClick={() => document.getElementById('video-upload')?.click()}
+                        className="bg-[#FE2C55] hover:bg-[#FE2C55]/90 text-white"
                       >
                         Chọn video
                       </Button>
@@ -170,24 +172,24 @@ export function Upload() {
 
               {/* Description */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Mô tả</label>
+                <label className="text-sm font-medium text-gray-300">Mô tả</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full min-h-[100px] rounded-md border border-gray-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE2C55]"
+                  className="w-full min-h-[100px] rounded-md border border-gray-700 bg-[#121212] text-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE2C55] placeholder:text-gray-500"
                   placeholder="Mô tả video của bạn..."
                 />
               </div>
 
               {/* Visibility */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Hiển thị</label>
+                <label className="text-sm font-medium text-gray-300">Hiển thị</label>
                 <select
                   value={formData.visibility}
                   onChange={(e) =>
                     setFormData({ ...formData, visibility: e.target.value as 'public' | 'hidden' })
                   }
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE2C55]"
+                  className="w-full rounded-md border border-gray-700 bg-[#121212] text-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE2C55]"
                 >
                   <option value="public">Công khai</option>
                   <option value="hidden">Riêng tư</option>
@@ -200,13 +202,13 @@ export function Upload() {
                   type="button"
                   variant="outline"
                   onClick={() => navigate(-1)}
-                  className="flex-1"
+                  className="flex-1 bg-transparent border-gray-600 text-white hover:bg-gray-800"
                 >
                   Hủy
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1"
+                  className="flex-1 bg-[#FE2C55] hover:bg-[#FE2C55]/90 text-white"
                   disabled={uploadMutation.isPending}
                 >
                   {uploadMutation.isPending ? 'Đang tải lên...' : 'Đăng video'}

@@ -18,7 +18,7 @@ export function Bookmarks() {
   const total = videos.length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#121212]">
       <div className="container mx-auto max-w-6xl pt-20 pb-8 px-4">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
@@ -26,8 +26,8 @@ export function Bookmarks() {
             <Bookmark className="h-7 w-7 fill-current" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Video đã lưu</h1>
-            <p className="text-sm text-gray-600 mt-1">
+            <h1 className="text-3xl font-bold text-white">Video đã lưu</h1>
+            <p className="text-sm text-gray-400 mt-1">
               {total > 0 ? `${total} video đã đánh dấu` : 'Chưa có video nào'}
             </p>
           </div>
@@ -89,14 +89,14 @@ export function Bookmarks() {
         ) : (
           <div className="text-center py-32">
             <div className="mb-6">
-              <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-to-br from-gray-100 to-gray-200 mb-4">
-                <Bookmark className="h-12 w-12 text-gray-400" />
+              <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gray-800 mb-4">
+                <Bookmark className="h-12 w-12 text-gray-500" />
               </div>
             </div>
-            <p className="text-gray-900 text-2xl font-bold mb-3">
+            <p className="text-white text-2xl font-bold mb-3">
               Chưa có video đã lưu
             </p>
-            <p className="text-gray-500 text-base max-w-md mx-auto">
+            <p className="text-gray-400 text-base max-w-md mx-auto">
               Các video bạn đánh dấu sẽ xuất hiện ở đây.<br />
               Nhấn vào icon bookmark khi xem video để lưu lại.
             </p>

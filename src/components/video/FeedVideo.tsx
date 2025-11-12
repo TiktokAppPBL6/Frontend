@@ -132,27 +132,27 @@ export function FeedVideo({ video, isInView = false, onVideoInView }: FeedVideoP
   return (
     <div
       ref={containerRef}
-      className="relative w-full max-w-[600px] mx-auto mb-4 snap-start"
-      style={{ minHeight: '100vh' }}
+      className="relative w-full h-full flex items-center justify-center bg-black"
     >
-      {/* Video Container */}
-      <div className="relative bg-gray-100 rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 100px)' }}>
+      {/* Video Container - Full Screen with safe area for topbar */}
+      <div className="relative w-full h-full pt-16">
         <video
           ref={videoRef}
           src={getMediaUrl(video.hlsUrl || video.url)}
           poster={getMediaUrl(video.thumbUrl)}
           className="w-full h-full object-contain cursor-pointer"
           loop
+          playsInline
           muted={isMuted}
           playsInline
           onClick={handleVideoClick}
         />
 
-        {/* Overlay Controls */}
+        {/* Overlay Controls - TikTok Style */}
         <div className="absolute inset-0 pointer-events-none">
           {/* Right Side - Avatar with Follow Button + Actions (TikTok Style) */}
-          <div className="absolute right-2 bottom-10 pointer-events-auto">
-            <div className="flex flex-col items-center gap-3">
+          <div className="absolute right-3 bottom-20 pointer-events-auto">
+            <div className="flex flex-col items-center gap-5">
               {/* Avatar with + button */}
               <div className="relative w-12 pb-1">
                 <button
@@ -194,34 +194,35 @@ export function FeedVideo({ video, isInView = false, onVideoInView }: FeedVideoP
           </div>
 
           {/* Bottom - User Info & Title */}
-          <div className="absolute bottom-3 left-3 right-14 pointer-events-auto">
+          <div className="absolute bottom-6 left-4 right-20 pointer-events-auto">
             {/* User Info & Title */}
             <div className="flex-1 min-w-0">
-              <div className="inline-block bg-black/40 backdrop-blur-sm rounded-lg px-3 py-1.5 max-w-[80%]">
-                <div className="text-white text-xs font-bold truncate">
-                  {ownerFullName || ownerUsername}
-                  {isOwnVideo && (
-                    <span className="ml-1 text-[10px] px-1 py-0.5 bg-white/20 rounded">(Bạn)</span>
-                  )}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="text-white font-bold text-base drop-shadow-lg">
+                    @{ownerUsername}
+                    {isOwnVideo && (
+                      <span className="ml-2 text-xs px-2 py-0.5 bg-white/20 rounded-full">(Bạn)</span>
+                    )}
+                  </div>
                 </div>
-                <p className="text-white/90 text-[11px] truncate">
-                  @{ownerUsername}
-                </p>
-                <p className="text-white text-xs line-clamp-1 leading-tight mt-0.5 font-medium">
+                <p className="text-white text-sm font-normal drop-shadow-lg line-clamp-2 leading-tight">
                   {video.title}
                 </p>
                 {video.description && (
-                  <div className="text-white/90 text-[11px] leading-snug mt-0.5">
-                    {showFullDesc || video.description.length <= 50 ? (
+                  <div className="text-white/95 text-sm drop-shadow-lg max-w-[90%]">
+                    {showFullDesc || video.description.length <= 100 ? (
                       <>
                         <p className="whitespace-pre-wrap break-words">{video.description}</p>
-                        {video.description.length > 50 && (
-                          <button onClick={(e)=>{e.stopPropagation(); setShowFullDesc(false);}} className="underline font-medium">rút gọn</button>
+                        {video.description.length > 100 && (
+                          <button onClick={(e)=>{e.stopPropagation(); setShowFullDesc(false);}} className="font-semibold mt-1">
+                            Rút gọn
+                          </button>
                         )}
                       </>
                     ) : (
-                      <button onClick={(e)=>{e.stopPropagation(); setShowFullDesc(true);}} className="underline font-medium">
-                        {video.description.slice(0,50)}... xem thêm
+                      <button onClick={(e)=>{e.stopPropagation(); setShowFullDesc(true);}} className="font-semibold">
+                        {video.description.slice(0,100)}... xem thêm
                       </button>
                     )}
                   </div>
