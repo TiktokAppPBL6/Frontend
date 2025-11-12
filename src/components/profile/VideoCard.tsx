@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MoreVertical, Edit, Trash2, Lock } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, Lock, Heart, MessageCircle } from 'lucide-react';
 import { formatNumber, getMediaUrl } from '@/lib/utils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { videosApi } from '@/api/videos.api';
@@ -59,9 +59,15 @@ export function VideoCard({ video, isOwnVideo = false, onEdit }: VideoCardProps)
 
         {/* Views Count - Bottom */}
         <div className="absolute bottom-0 left-0 right-0 p-2">
-          <div className="flex items-center gap-1 text-white text-xs font-semibold">
-            <span className="text-white/90">▶</span>
-            <span>{formatNumber(video.likes_count ?? video.likesCount ?? 0)}</span>
+          <div className="flex items-center gap-3 text-white text-xs font-semibold">
+            <div className="flex items-center gap-1">
+              <Heart className="h-3.5 w-3.5 fill-white text-white" />
+              <span>{formatNumber(video.likes_count ?? video.likesCount ?? 0)}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <MessageCircle className="h-3.5 w-3.5 text-white" />
+              <span>{formatNumber(video.comments_count ?? video.commentsCount ?? 0)}</span>
+            </div>
           </div>
         </div>
       </Link>

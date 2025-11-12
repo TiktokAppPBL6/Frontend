@@ -1,8 +1,16 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Play, TrendingUp, Users, Heart } from 'lucide-react';
+import { useAuthStore } from '@/app/store/auth';
 
 export function Intro() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  // If user is already logged in, redirect to home
+  if (isAuthenticated) {
+    return <Navigate to="/home" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-[#121212]">
       {/* Hero Section */}
