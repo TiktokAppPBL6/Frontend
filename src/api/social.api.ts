@@ -1,17 +1,11 @@
-import axiosClient, { shouldUseMock } from './axiosClient';
+import axiosClient from './axiosClient';
 import type { ID, User } from '@/types';
-import { mockDelay, mockVideos } from '@/mocks/mockDB';
-
 export const socialApi = {
   // Like video
   likeVideo: async (videoId: ID): Promise<void> => {
     try {
       await axiosClient.post(`/social/likes/${videoId}`);
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay(300);
-        return;
-      }
       throw error;
     }
   },
@@ -21,10 +15,6 @@ export const socialApi = {
     try {
       await axiosClient.delete(`/social/likes/${videoId}`);
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay(300);
-        return;
-      }
       throw error;
     }
   },
@@ -37,10 +27,6 @@ export const socialApi = {
       );
       return response.data;
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        return { likes: [], total: 0 };
-      }
       throw error;
     }
   },
@@ -50,10 +36,6 @@ export const socialApi = {
     try {
       await axiosClient.post(`/social/follow/${userId}`);
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay(300);
-        return;
-      }
       throw error;
     }
   },
@@ -63,10 +45,6 @@ export const socialApi = {
     try {
       await axiosClient.delete(`/social/unfollow/${userId}`);
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay(300);
-        return;
-      }
       throw error;
     }
   },
@@ -85,10 +63,6 @@ export const socialApi = {
       
       return { followers, total };
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        return { followers: [], total: 0 };
-      }
       throw error;
     }
   },
@@ -107,10 +81,6 @@ export const socialApi = {
       
       return { following, total };
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        return { following: [], total: 0 };
-      }
       throw error;
     }
   },
@@ -120,10 +90,6 @@ export const socialApi = {
     try {
       await axiosClient.post(`/social/bookmarks/${videoId}`);
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay(300);
-        return;
-      }
       throw error;
     }
   },
@@ -133,10 +99,6 @@ export const socialApi = {
     try {
       await axiosClient.delete(`/social/bookmarks/${videoId}`);
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay(300);
-        return;
-      }
       throw error;
     }
   },
@@ -149,13 +111,6 @@ export const socialApi = {
       );
       return response.data;
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        return {
-          videos: mockVideos.filter((v) => v.isBookmarked),
-          total: mockVideos.filter((v) => v.isBookmarked).length,
-        };
-      }
       throw error;
     }
   },

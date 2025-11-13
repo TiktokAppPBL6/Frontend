@@ -41,20 +41,20 @@ export function CommentsModal({ videoId, onClose }: CommentsModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+      <div className="relative bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col border border-gray-800">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 bg-gradient-to-r from-white to-gray-50">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 bg-[#1E1E1E]">
           <div>
-            <h3 className="text-gray-900 font-bold text-lg">Bình luận</h3>
-            <p className="text-gray-500 text-xs mt-0.5">{data?.total ?? 0} bình luận</p>
+            <h3 className="text-white font-bold text-lg">Bình luận</h3>
+            <p className="text-gray-400 text-xs mt-0.5">{data?.total ?? 0} bình luận</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-gray-100 rounded-full">
+          <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-gray-800 rounded-full text-white">
             <X className="h-5 w-5" />
           </Button>
         </div>
 
         {/* List */}
-        <div className={cn("flex-1 overflow-y-auto p-4 bg-gray-50/50", isLoading && 'opacity-60')}>          
+        <div className={cn("flex-1 overflow-y-auto p-4 bg-[#121212]", isLoading && 'opacity-60')}>          
           <div className="space-y-3">
             {data?.comments?.map((c: any) => {
               // Response fields can be at top level or nested in c.user
@@ -64,15 +64,15 @@ export function CommentsModal({ videoId, onClose }: CommentsModalProps) {
               const avatar = getAvatarUrl(c.avatarUrl ?? c.avatar_url ?? u.avatarUrl ?? u.avatar_url);
               
               return (
-                <div key={c.id} className="flex gap-3 bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow">
-                  <Avatar src={avatar} alt={username} size="sm" className="ring-2 ring-gray-100" />
+                <div key={c.id} className="flex gap-3 bg-[#1E1E1E] rounded-xl p-3 border border-gray-800 hover:border-gray-700 transition-all">
+                  <Avatar src={avatar} alt={username} size="sm" className="ring-2 ring-gray-800" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <p className="text-gray-900 text-sm font-bold truncate">{fullName || username}</p>
-                      <span className="text-gray-400 text-xs">· {formatDate(c.createdAt ?? c.created_at)}</span>
+                      <p className="text-white text-sm font-bold truncate">{fullName || username}</p>
+                      <span className="text-gray-500 text-xs">· {formatDate(c.createdAt ?? c.created_at)}</span>
                     </div>
-                    <p className="text-gray-500 text-xs mb-1.5">@{username}</p>
-                    <p className="text-gray-800 text-[13px] leading-relaxed whitespace-pre-wrap break-words">{c.content}</p>
+                    <p className="text-gray-400 text-xs mb-1.5">@{username}</p>
+                    <p className="text-gray-300 text-[13px] leading-relaxed whitespace-pre-wrap break-words">{c.content}</p>
                   </div>
                 </div>
               );
@@ -81,14 +81,14 @@ export function CommentsModal({ videoId, onClose }: CommentsModalProps) {
             {!data?.comments?.length && !isLoading && (
               <div className="text-center py-16">
                 <p className="text-gray-400 text-sm">Chưa có bình luận nào</p>
-                <p className="text-gray-300 text-xs mt-1">Hãy là người đầu tiên bình luận!</p>
+                <p className="text-gray-600 text-xs mt-1">Hãy là người đầu tiên bình luận!</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Input */}
-        <div className="border-t border-gray-200 p-4 bg-white">
+        <div className="border-t border-gray-800 p-4 bg-[#1E1E1E]">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -101,7 +101,7 @@ export function CommentsModal({ videoId, onClose }: CommentsModalProps) {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Viết bình luận..."
-              className="flex-1 bg-gray-50 border-gray-200 rounded-full px-4 py-2 focus:bg-white focus:ring-2 focus:ring-[#FE2C55]/20 transition-all"
+              className="flex-1 bg-[#121212] border-gray-700 text-white rounded-full px-4 py-2 focus:bg-[#121212] focus:border-[#FE2C55] focus:ring-2 focus:ring-[#FE2C55]/20 transition-all placeholder:text-gray-500"
               disabled={commentMutation.isPending}
             />
             <Button 

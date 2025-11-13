@@ -102,7 +102,7 @@ export function Upload() {
   };
 
   return (
-    <div className="min-h-screen bg-[#121212] pt-20 pb-8">
+    <div className="min-h-screen bg-[#121212] py-6">
       <div className="container mx-auto max-w-2xl px-4">
         <Card className="bg-[#1e1e1e] border-gray-800">
           <CardHeader>

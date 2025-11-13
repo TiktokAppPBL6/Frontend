@@ -2,7 +2,6 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthGuard } from './guards/AuthGuard';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { Topbar } from '@/components/layout/Topbar';
 import { VideoSkeleton } from '@/components/ui/skeleton';
 
 // Lazy load pages
@@ -30,9 +29,8 @@ const PageLoader = () => (
 // Layout wrapper for authenticated routes
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#121212]">
       <Sidebar />
-      <Topbar />
       <main className="lg:pl-64">
         {children}
       </main>

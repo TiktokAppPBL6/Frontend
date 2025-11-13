@@ -23,6 +23,8 @@ export function FeedVideo({ video, isInView = false, onVideoInView }: FeedVideoP
   const [isPlaying, setIsPlaying] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showFullDesc, setShowFullDesc] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+  const [progress, setProgress] = useState(0);
   const currentUser = useAuthStore((s) => s.user);
   
   // Owner info: API returns username, fullName, avatarUrl directly at video level
@@ -110,6 +112,34 @@ export function FeedVideo({ video, isInView = false, onVideoInView }: FeedVideoP
     }
   }, [isInView]);
 
+  // Update progress bar
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const updateProgress = () => {
+      const progress = (video.currentTime / video.duration) * 100;
+      setProgress(progress || 0);
+    };
+
+    video.addEventListener('timeupdate', updateProgress);
+    video.addEventListener('loadedmetadata', updateProgress);
+    return () => {
+      video.removeEventListener('timeupdate', updateProgress);
+      video.removeEventListener('loadedmetadata', updateProgress);
+    };
+  }, []);
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    video.currentTime = percentage * video.duration;
+  };
+
   const toggleMute = () => {
     if (videoRef.current) {
       videoRef.current.muted = !videoRef.current.muted;
@@ -134,68 +164,34 @@ export function FeedVideo({ video, isInView = false, onVideoInView }: FeedVideoP
       ref={containerRef}
       className="relative w-full h-full flex items-center justify-center bg-black"
     >
-      {/* Video Container - Full Screen with safe area for topbar */}
-      <div className="relative w-full h-full pt-16">
-        <video
-          ref={videoRef}
-          src={getMediaUrl(video.hlsUrl || video.url)}
-          poster={getMediaUrl(video.thumbUrl)}
-          className="w-full h-full object-contain cursor-pointer"
-          loop
-          playsInline
-          muted={isMuted}
-          playsInline
-          onClick={handleVideoClick}
-        />
+      {/* Main Container with Video and Actions Side by Side */}
+      <div className="relative flex items-end justify-center gap-3 px-4">
+        {/* Video Container - Bo tròn, giữ nguyên tỷ lệ khung hình */}
+        <div className="relative max-w-[800px] max-h-full flex items-center justify-center">
+          <video
+            ref={videoRef}
+            src={getMediaUrl(video.hlsUrl || video.url)}
+            poster={getMediaUrl(video.thumbUrl)}
+            className="max-w-full max-h-[calc(100vh-40px)] object-contain cursor-pointer rounded-3xl shadow-2xl"
+            loop
+            playsInline
+            muted={isMuted}
+            onClick={handleVideoClick}
+          />
 
-        {/* Overlay Controls - TikTok Style */}
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Right Side - Avatar with Follow Button + Actions (TikTok Style) */}
-          <div className="absolute right-3 bottom-20 pointer-events-auto">
-            <div className="flex flex-col items-center gap-5">
-              {/* Avatar with + button */}
-              <div className="relative w-12 pb-1">
-                <button
-                  onClick={() => navigate(`/user/${ownerId}`)}
-                  className="block transition-transform hover:scale-105"
-                >
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 shadow-lg">
-                    <img
-                      src={ownerAvatar}
-                      alt={ownerUsername}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </button>
-                {/* Follow/Unfollow button like TikTok: + when not following, ✓ when following */}
-                {!isOwnVideo && ownerId && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!followMutation.isPending) followMutation.mutate();
-                    }}
-                    disabled={followMutation.isPending}
-                    aria-label={isFollowing ? 'Bỏ theo dõi' : 'Theo dõi'}
-                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#FE2C55] text-white flex items-center justify-center text-sm font-bold shadow-md ring-2 ring-white hover:brightness-110 disabled:opacity-70 transition-all"
-                  >
-                    {isFollowing ? '✓' : '+'}
-                  </button>
-                )}
-              </div>
-              
-              {/* Action Buttons incl. menu */}
-              <VideoActions
-                video={video}
-                onCommentClick={() => setShowComments(true)}
-                isMuted={isMuted}
-                onMuteToggle={toggleMute}
-              />
-            </div>
+          {/* Progress Bar - Interactive, slightly above bottom for rounded corners */}
+          <div 
+            className="absolute bottom-2 left-2 right-2 h-1 bg-white/20 rounded-full cursor-pointer group hover:h-1.5 transition-all"
+            onClick={handleProgressClick}
+          >
+            <div 
+              className="h-full bg-white rounded-full transition-all duration-100 group-hover:bg-[#FE2C55]"
+              style={{ width: `${progress}%` }}
+            />
           </div>
 
-          {/* Bottom - User Info & Title */}
-          <div className="absolute bottom-6 left-4 right-20 pointer-events-auto">
-            {/* User Info & Title */}
+          {/* Bottom - User Info & Title (inside video) */}
+          <div className="absolute bottom-6 left-4 right-4 pointer-events-auto">
             <div className="flex-1 min-w-0">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -230,6 +226,48 @@ export function FeedVideo({ video, isInView = false, onVideoInView }: FeedVideoP
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Actions Column - Outside video, aligned with video bottom */}
+        <div className="flex-shrink-0 flex flex-col items-center gap-5 pb-1">
+          {/* Avatar with Follow Button */}
+          <div className="relative w-12 pb-1">
+            <button
+              onClick={() => navigate(`/user/${ownerId}`)}
+              className="block transition-transform hover:scale-105"
+            >
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 shadow-lg">
+                <img
+                  src={avatarError ? '/avatar.jpg' : ownerAvatar}
+                  alt={ownerUsername}
+                  className="w-full h-full object-cover"
+                  onError={() => setAvatarError(true)}
+                />
+              </div>
+            </button>
+            {/* Follow/Unfollow button */}
+            {!isOwnVideo && ownerId && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!followMutation.isPending) followMutation.mutate();
+                }}
+                disabled={followMutation.isPending}
+                aria-label={isFollowing ? 'Bỏ theo dõi' : 'Theo dõi'}
+                className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#FE2C55] text-white flex items-center justify-center text-sm font-bold shadow-md ring-2 ring-white hover:brightness-110 disabled:opacity-70 transition-all"
+              >
+                {isFollowing ? '✓' : '+'}
+              </button>
+            )}
+          </div>
+          
+          {/* Video Actions */}
+          <VideoActions
+            video={video}
+            onCommentClick={() => setShowComments(true)}
+            isMuted={isMuted}
+            onMuteToggle={toggleMute}
+          />
         </div>
       </div>
       {showComments && (

@@ -1,5 +1,5 @@
-import React from 'react';
-import { cn, getMediaUrl } from '@/lib/utils';
+import React, { useState } from 'react';
+import { cn, getAvatarUrl } from '@/lib/utils';
 import { User } from 'lucide-react';
 
 interface AvatarProps {
@@ -10,6 +10,8 @@ interface AvatarProps {
 }
 
 export function Avatar({ src, alt = 'Avatar', size = 'md', className }: AvatarProps) {
+  const [imageError, setImageError] = useState(false);
+  
   const sizeClasses = {
     sm: 'h-8 w-8',
     md: 'h-10 w-10',
@@ -17,7 +19,8 @@ export function Avatar({ src, alt = 'Avatar', size = 'md', className }: AvatarPr
     xl: 'h-16 w-16',
   };
 
-  const avatarUrl = getMediaUrl(src);
+  const avatarUrl = getAvatarUrl(src);
+  const defaultAvatar = '/avatar.jpg';
 
   return (
     <div
@@ -27,12 +30,19 @@ export function Avatar({ src, alt = 'Avatar', size = 'md', className }: AvatarPr
         className
       )}
     >
-      {avatarUrl ? (
-        <img src={avatarUrl} alt={alt} className="h-full w-full object-cover" />
+      {!imageError ? (
+        <img 
+          src={avatarUrl} 
+          alt={alt} 
+          className="h-full w-full object-cover" 
+          onError={() => setImageError(true)}
+        />
       ) : (
-        <div className="h-full w-full flex items-center justify-center bg-gray-300">
-          <User className="h-1/2 w-1/2 text-gray-500" />
-        </div>
+        <img 
+          src={defaultAvatar} 
+          alt={alt} 
+          className="h-full w-full object-cover" 
+        />
       )}
     </div>
   );

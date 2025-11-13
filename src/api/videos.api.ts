@@ -1,4 +1,4 @@
-import axiosClient, { shouldUseMock } from './axiosClient';
+import axiosClient from './axiosClient';
 import type {
   Video,
   VideoUploadRequest,
@@ -7,13 +7,6 @@ import type {
   PaginationParams,
   SearchParams,
 } from '@/types';
-import {
-  mockVideos,
-  mockDelay,
-  getMockVideo,
-  getMockVideosByUser,
-  searchMockVideos,
-} from '@/mocks/mockDB';
 
 export const videosApi = {
   // Get video feed
@@ -24,29 +17,6 @@ export const videosApi = {
       });
 
       const data = response.data;
-      const videos = Array.isArray(data) ? data : data?.videos;
-
-      // If API returns empty, use mock data
-      if (!videos || videos.length === 0) {
-        console.log('📦 API returned empty, using mock videos');
-        await mockDelay();
-        const page = params?.page || 1;
-        const pageSize = params?.pageSize || 10;
-        const start = (page - 1) * pageSize;
-        const end = start + pageSize;
-        // Sort mock videos by createdAt desc to mimic newest first
-        const videosSorted = [...mockVideos].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        const paged = videosSorted.slice(start, end);
-        return {
-          videos: paged,
-          total: mockVideos.length,
-          page,
-          pageSize,
-          hasMore: end < mockVideos.length,
-        };
-      }
 
       // If backend returned array directly, wrap into normalized response
       if (Array.isArray(data)) {
@@ -57,24 +27,6 @@ export const videosApi = {
 
       return data as VideosResponse;
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        const page = params?.page || 1;
-        const pageSize = params?.pageSize || 10;
-        const start = (page - 1) * pageSize;
-        const end = start + pageSize;
-        const videosSorted = [...mockVideos].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        const videos = videosSorted.slice(start, end);
-        return {
-          videos,
-          total: mockVideos.length,
-          page,
-          pageSize,
-          hasMore: end < mockVideos.length,
-        };
-      }
       throw error;
     }
   },
@@ -104,24 +56,6 @@ export const videosApi = {
         hasMore: data?.hasMore ?? data?.has_more ?? false,
       };
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        const page = params?.page || 1;
-        const pageSize = params?.pageSize || 10;
-        const start = (page - 1) * pageSize;
-        const end = start + pageSize;
-        const videosSorted = [...mockVideos].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        const videos = videosSorted.slice(start, end);
-        return {
-          videos,
-          total: mockVideos.length,
-          page,
-          pageSize,
-          hasMore: end < mockVideos.length,
-        };
-      }
       throw error;
     }
   },
@@ -132,12 +66,6 @@ export const videosApi = {
       const response = await axiosClient.get<Video>(`/videos/${videoId}`);
       return response.data;
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        const video = getMockVideo(videoId);
-        if (!video) throw new Error('Video not found');
-        return video;
-      }
       throw error;
     }
   },
@@ -150,27 +78,6 @@ export const videosApi = {
       });
       
       console.log('📹 User videos response:', response.data);
-      
-      // Check if response is an array (some backends return array directly)
-      let videos = Array.isArray(response.data) ? response.data : response.data.videos;
-      
-      // If API returns empty, use mock data
-      if (!videos || videos.length === 0) {
-        console.log('📦 API returned empty user videos, using mock data');
-        await mockDelay();
-        const mockVideos = getMockVideosByUser(userId);
-        const page = params?.page || 1;
-        const pageSize = params?.pageSize || 10;
-        const start = (page - 1) * pageSize;
-        const end = start + pageSize;
-        return {
-          videos: mockVideos.slice(start, end),
-          total: mockVideos.length,
-          page,
-          pageSize,
-          hasMore: end < mockVideos.length,
-        };
-      }
       
       // Normalize response
       if (Array.isArray(response.data)) {
@@ -185,21 +92,6 @@ export const videosApi = {
       
       return response.data;
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        const videos = getMockVideosByUser(userId);
-        const page = params?.page || 1;
-        const pageSize = params?.pageSize || 10;
-        const start = (page - 1) * pageSize;
-        const end = start + pageSize;
-        return {
-          videos: videos.slice(start, end),
-          total: videos.length,
-          page,
-          pageSize,
-          hasMore: end < videos.length,
-        };
-      }
       throw error;
     }
   },
@@ -223,10 +115,6 @@ export const videosApi = {
       const videos = Array.isArray(response.data) ? response.data : response.data?.videos ?? response.data?.items ?? [];
       return videos;
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        return searchMockVideos(params.query);
-      }
       throw error;
     }
   },
@@ -246,29 +134,6 @@ export const videosApi = {
       });
       return response.data;
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        const newVideo: Video = {
-          id: Date.now(),
-          ownerId: 1,
-          title: data.title,
-          description: data.description,
-          visibility: data.visibility || 'public',
-          url: data.file ? URL.createObjectURL(data.file) : data.url || '',
-          hlsUrl: data.file ? URL.createObjectURL(data.file) : data.url,
-          thumbUrl: 'https://picsum.photos/400/600?random=' + Date.now(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          owner: mockVideos[0].owner,
-          likeCount: 0,
-          commentCount: 0,
-          viewCount: 0,
-          shareCount: 0,
-          isLiked: false,
-          isBookmarked: false,
-        };
-        return newVideo;
-      }
       throw error;
     }
   },
@@ -279,12 +144,6 @@ export const videosApi = {
       const response = await axiosClient.put<Video>(`/videos/${videoId}`, data);
       return response.data;
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        const video = getMockVideo(videoId);
-        if (!video) throw new Error('Video not found');
-        return { ...video, ...data };
-      }
       throw error;
     }
   },
@@ -294,10 +153,6 @@ export const videosApi = {
     try {
       await axiosClient.delete(`/videos/${videoId}`);
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        return;
-      }
       throw error;
     }
   },

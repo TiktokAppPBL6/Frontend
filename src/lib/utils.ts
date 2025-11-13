@@ -58,7 +58,10 @@ export function getMediaUrl(url: string | undefined | null, defaultAvatar: boole
 
 // Get avatar URL with default fallback
 export function getAvatarUrl(url: string | undefined | null): string {
-  if (!url) return '/avatar.jpg';
+  // Always return default avatar if URL is null, undefined, or empty
+  if (!url || url.trim() === '') {
+    return '/avatar.jpg';
+  }
   
   // If already a full URL (starts with http:// or https://), return as is
   if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -68,6 +71,11 @@ export function getAvatarUrl(url: string | undefined | null): string {
   // If it's a blob URL (for preview), return as is
   if (url.startsWith('blob:')) {
     return url;
+  }
+  
+  // If it's already pointing to default avatar, return as is
+  if (url === '/avatar.jpg' || url === 'avatar.jpg') {
+    return '/avatar.jpg';
   }
   
   // Otherwise, prepend backend base URL

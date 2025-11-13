@@ -42,7 +42,7 @@ export function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-[#121212] pt-20 pb-8">
+    <div className="min-h-screen bg-[#121212] py-6">
       <div className="container mx-auto max-w-5xl px-4">
         <h1 className="text-2xl font-bold mb-6 text-white">Cài đặt</h1>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

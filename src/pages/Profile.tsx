@@ -35,10 +35,16 @@ export function Profile() {
     enabled: !!userId,
   });
 
+  // Get videos count from user data first
+  const userVideosCount = user 
+    ? ((user as any).videos_count ?? (user as any).videosCount ?? null)
+    : null;
+
   const { data: videosData, isLoading: videosLoading } = useQuery({
     queryKey: ['videos', 'user', userId],
     queryFn: () => videosApi.getUserVideos(userId, { page: 1, pageSize: 20 }),
-    enabled: !!userId,
+    // Only fetch if userId exists AND (we don't have count info yet OR count > 0)
+    enabled: !!userId && (userVideosCount === null || userVideosCount > 0),
   });
 
   // Filter videos by privacy for own profile
@@ -87,7 +93,7 @@ export function Profile() {
 
   if (userLoading) {
     return (
-      <div className="min-h-screen bg-white pt-20 pb-8">
+      <div className="min-h-screen bg-[#121212] py-6">
         <div className="container mx-auto max-w-4xl px-4">
           <Skeleton className="h-32 w-full mb-4" />
           <Skeleton className="h-96 w-full" />
@@ -98,9 +104,9 @@ export function Profile() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-white pt-20 pb-8 flex items-center justify-center">
+      <div className="min-h-screen bg-[#121212] py-6 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-xl text-gray-600">Không tìm thấy người dùng</p>
+          <p className="text-xl text-gray-400">Không tìm thấy người dùng</p>
         </div>
       </div>
     );
@@ -108,7 +114,7 @@ export function Profile() {
 
   return (
     <>
-    <div className="min-h-screen bg-[#121212] pt-20 pb-8">
+    <div className="min-h-screen bg-[#121212] py-6">
       <div className="container mx-auto max-w-5xl px-4">
         {/* Profile Header - TikTok Style */}
         <div className="mb-8">
@@ -250,7 +256,8 @@ export function Profile() {
             </div>
           )}
           
-          {videosLoading ? (
+          {/* Show skeleton only when actually loading AND don't know it's empty yet */}
+          {videosLoading && userVideosCount !== 0 ? (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
               {[...Array(12)].map((_, i) => (
                 <Skeleton key={i} className="aspect-[9/16] rounded-lg bg-gray-800" />

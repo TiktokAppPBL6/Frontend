@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search as SearchIcon, User, Video, Heart, MessageCircle, Play } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { User, Video, Heart, MessageCircle, Play } from 'lucide-react';
 import { Avatar } from '@/components/common/Avatar';
 import { usersApi } from '@/api/users.api';
 import { videosApi } from '@/api/videos.api';
@@ -10,10 +9,9 @@ import { formatNumber, getMediaUrl, getAvatarUrl } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function Search() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'users' | 'videos'>('videos');
   const query = searchParams.get('q') || '';
-  const [searchInput, setSearchInput] = useState(query);
 
   // Search users
   const { data: users, isLoading: usersLoading } = useQuery({
@@ -29,34 +27,18 @@ export function Search() {
     enabled: !!query && activeTab === 'videos',
   });
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchInput.trim()) {
-      setSearchParams({ q: searchInput.trim() });
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-[#121212] pt-20 pb-8">
+    <div className="min-h-screen bg-[#121212] py-6">
       <div className="container mx-auto max-w-6xl px-4">
-        {/* Search Bar */}
-        <form onSubmit={handleSearch} className="mb-8">
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder="Tìm kiếm video, người dùng..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="pr-12 h-12 text-lg bg-[#1e1e1e] border-gray-700 text-white placeholder:text-gray-500"
-            />
-            <button
-              type="submit"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FE2C55] transition-colors"
-            >
-              <SearchIcon className="h-6 w-6" />
-            </button>
-          </div>
-        </form>
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-white mb-2">
+            {query ? `Kết quả tìm kiếm: "${query}"` : 'Tìm kiếm'}
+          </h1>
+          <p className="text-gray-400">
+            {query ? 'Khám phá video và người dùng phù hợp' : 'Sử dụng thanh tìm kiếm bên trái để tìm kiếm'}
+          </p>
+        </div>
 
         {query && (
           <>

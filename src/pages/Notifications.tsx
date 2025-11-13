@@ -16,7 +16,7 @@ export function Notifications() {
   };
 
   return (
-    <div className="min-h-screen bg-[#121212] pt-20 pb-8">
+    <div className="min-h-screen bg-[#121212] py-6">
       <div className="container mx-auto max-w-2xl px-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-white">Thông báo</h1>
@@ -67,11 +67,14 @@ export function Notifications() {
           </div>
         ) : (
           <div className="text-center py-32">
-            <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-[#1e1e1e] mb-6">
-              <Bell className="h-12 w-12 text-gray-600" />
+            <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-[#1e1e1e] mb-8">
+              <Bell className="h-14 w-14 text-gray-600" />
             </div>
-            <p className="text-gray-400 text-lg font-medium">Chưa có thông báo nào</p>
-            <p className="text-gray-500 text-sm mt-2">Các thông báo về tương tác sẽ hiển thị ở đây</p>
+            <h3 className="text-white text-2xl font-bold mb-3">Chưa có thông báo</h3>
+            <p className="text-gray-400 text-base max-w-md mx-auto leading-relaxed">
+              Khi ai đó thích, bình luận hoặc theo dõi bạn,<br />
+              bạn sẽ nhận được thông báo ở đây
+            </p>
           </div>
         )}
       </div>

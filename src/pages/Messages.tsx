@@ -52,7 +52,7 @@ export function Messages() {
   };
 
   return (
-    <div className="min-h-screen bg-[#121212] pt-16">
+    <div className="min-h-screen bg-[#121212] py-6">
       <div className="container mx-auto max-w-6xl h-[calc(100vh-4rem)]">
         <div className="grid grid-cols-1 md:grid-cols-3 h-full bg-[#1e1e1e] rounded-lg shadow-lg overflow-hidden border border-gray-800">
           {/* Conversations List */}
@@ -98,9 +98,14 @@ export function Messages() {
                 ))}
               </div>
             ) : (
-              <div className="p-8 text-center text-gray-400">
-                <MessageSquare className="h-12 w-12 mx-auto mb-2 text-gray-600" />
-                <p>Chưa có tin nhắn nào</p>
+              <div className="flex flex-col items-center justify-center h-full py-12 px-4 text-center">
+                <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gray-800 mb-6">
+                  <MessageSquare className="h-12 w-12 text-gray-500" />
+                </div>
+                <h3 className="text-white text-xl font-bold mb-2">Chưa có tin nhắn</h3>
+                <p className="text-gray-400 text-sm max-w-xs">
+                  Bắt đầu trò chuyện với bạn bè và những người bạn theo dõi
+                </p>
               </div>
             )}
           </div>
@@ -176,10 +181,15 @@ export function Messages() {
                 </form>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-gray-400">
-                <div className="text-center">
-                  <MessageSquare className="h-16 w-16 mx-auto mb-4 text-gray-600" />
-                  <p className="text-lg">Chọn một cuộc trò chuyện để bắt đầu</p>
+              <div className="flex-1 flex items-center justify-center bg-[#121212]">
+                <div className="text-center px-4">
+                  <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-[#1e1e1e] mb-6">
+                    <MessageSquare className="h-14 w-14 text-gray-600" />
+                  </div>
+                  <h3 className="text-white text-2xl font-bold mb-3">Tin nhắn của bạn</h3>
+                  <p className="text-gray-400 text-base max-w-sm mx-auto leading-relaxed">
+                    Chọn một cuộc trò chuyện từ danh sách bên trái để bắt đầu nhắn tin
+                  </p>
                 </div>
               </div>
             )}

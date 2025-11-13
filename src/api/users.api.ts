@@ -1,7 +1,5 @@
-import axiosClient, { shouldUseMock } from './axiosClient';
+import axiosClient from './axiosClient';
 import type { User, SearchParams } from '@/types';
-import { mockUsers, mockDelay, getMockUser, searchMockUsers } from '@/mocks/mockDB';
-
 export const usersApi = {
   // Get current user
   getMe: async (): Promise<User> => {
@@ -9,10 +7,6 @@ export const usersApi = {
       const response = await axiosClient.get<User>('/users/me');
       return response.data;
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        return mockUsers[0]; // Return first mock user as current user
-      }
       throw error;
     }
   },
@@ -23,10 +17,6 @@ export const usersApi = {
       const response = await axiosClient.put<User>('/users/me', data);
       return response.data;
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        return { ...mockUsers[0], ...data };
-      }
       throw error;
     }
   },
@@ -58,13 +48,6 @@ export const usersApi = {
     } catch (error: any) {
       console.error('❌ Avatar upload failed:', error.response?.data || error.message);
       
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        return {
-          ...mockUsers[0],
-          avatarUrl: URL.createObjectURL(file),
-        };
-      }
       throw error;
     }
   },
@@ -75,12 +58,6 @@ export const usersApi = {
       const response = await axiosClient.get<User>(`/users/${userId}`);
       return response.data;
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        const user = getMockUser(userId);
-        if (!user) throw new Error('User not found');
-        return user;
-      }
       throw error;
     }
   },
@@ -93,10 +70,6 @@ export const usersApi = {
       });
       return response.data;
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        return { users: mockUsers, total: mockUsers.length };
-      }
       throw error;
     }
   },
@@ -108,19 +81,8 @@ export const usersApi = {
         params: { q: query },
       });
       
-      // If API returns empty, use mock data
-      if (!response.data || response.data.length === 0) {
-        console.log('📦 API returned no users, using mock data');
-        await mockDelay();
-        return searchMockUsers(query);
-      }
-      
       return response.data;
     } catch (error) {
-      if (shouldUseMock(error)) {
-        await mockDelay();
-        return searchMockUsers(query);
-      }
       throw error;
     }
   },

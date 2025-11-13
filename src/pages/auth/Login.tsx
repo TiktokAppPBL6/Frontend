@@ -67,23 +67,29 @@ export function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#121212] p-4">
       <Card className="w-full max-w-md bg-[#1e1e1e] border-gray-800">
-        <CardHeader className="text-center">
-           <div className="flex justify-center mb-8">
-            <div className="bg-gradient-to-br from-[#FE2C55] to-[#00F2EA] rounded-3xl flex items-center justify-center shadow-2xl px-10 py-4">
-              <span className="text-white font-bold text-5xl"> Toptop </span>
+        <CardHeader className="text-center pb-4">
+          {/* Logo */}
+          <div className="flex justify-center mb-4">
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-[#FE2C55] via-[#00F2EA] to-[#FE2C55] rounded-3xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+              <div className="relative bg-[#1e1e1e] rounded-3xl flex items-center justify-center px-8 py-3">
+                <span className="text-4xl font-black bg-gradient-to-r from-[#FE2C55] via-[#FF6B9D] to-[#00F2EA] text-transparent bg-clip-text">
+                  Toptop
+                </span>
+              </div>
             </div>
-          </div> 
-          <CardTitle className="text-2xl text-white">Đăng nhập</CardTitle>
-          <CardDescription className="text-gray-400">Đăng nhập để khám phá video thú vị</CardDescription>
+          </div>
+          <CardTitle className="text-xl text-white">Đăng nhập</CardTitle>
+          <CardDescription className="text-gray-400 text-sm">Đăng nhập để khám phá video thú vị</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="pt-2">
+          <form onSubmit={handleSubmit} className="space-y-3">
             {loginError && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-start gap-2">
-                <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2.5 flex items-start gap-2">
+                <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
-                <p className="text-sm text-red-400">{loginError}</p>
+                <p className="text-xs text-red-400">{loginError}</p>
               </div>
             )}
             
@@ -115,13 +121,13 @@ export function Login() {
             
             <Button 
               type="submit" 
-              className="w-full bg-[#FE2C55] hover:bg-[#FE2C55]/90 text-white" 
+              className="w-full bg-[#FE2C55] hover:bg-[#FE2C55]/90 text-white mt-4" 
               disabled={isLoading}
             >
               {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </Button>
             
-            <div className="text-center text-sm">
+            <div className="text-center text-sm pt-2">
               <span className="text-gray-400">Chưa có tài khoản? </span>
               <Link to="/auth/register" className="text-[#FE2C55] hover:underline font-semibold">
                 Đăng ký ngay
