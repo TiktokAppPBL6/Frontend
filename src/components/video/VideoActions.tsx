@@ -124,17 +124,19 @@ export function VideoActions({ video, vertical = true, onCommentClick, isMuted, 
   }) => (
     <button
       onClick={(e) => {
+        e.preventDefault();
         e.stopPropagation();
         onClick();
       }}
-      className="flex flex-col items-center gap-0.5 group"
+      className="flex flex-col items-center gap-0.5 group relative cursor-pointer"
       disabled={!!disabled}
+      style={{ pointerEvents: 'auto' }}
     >
       <div
         className={cn(
-          'w-10 h-10 rounded-full flex items-center justify-center transition-all backdrop-blur-md',
+          'w-10 h-10 rounded-full flex items-center justify-center transition-all backdrop-blur-md cursor-pointer',
           'bg-gray-900/70 hover:bg-gray-900/80 border border-white/10',
-          'shadow-lg hover:scale-110',
+          'shadow-lg hover:scale-110 active:scale-95',
           active && (activeColor === 'yellow'
             ? 'bg-yellow-400/90 text-white hover:bg-yellow-500/90 border-yellow-400/30'
             : 'bg-[#FE2C55]/90 text-white hover:bg-[#FE2C55] border-[#FE2C55]/30')
@@ -151,8 +153,8 @@ export function VideoActions({ video, vertical = true, onCommentClick, isMuted, 
   );
 
   const containerClass = vertical
-    ? 'flex flex-col gap-3 pointer-events-auto z-10'
-    : 'flex flex-row gap-3 items-center justify-center pointer-events-auto z-10';
+    ? 'flex flex-col gap-3 pointer-events-auto relative z-50'
+    : 'flex flex-row gap-3 items-center justify-center pointer-events-auto relative z-50';
 
   return (
     <div className={containerClass}>
@@ -171,19 +173,19 @@ export function VideoActions({ video, vertical = true, onCommentClick, isMuted, 
       />
       <ActionButton icon={Bookmark} active={isBookmarked} onClick={handleBookmark} activeColor="yellow" disabled={bookmarkMutation.isPending} />
       {/* More menu */}
-      <div className="relative">
+      <div className="relative z-50" style={{ pointerEvents: 'auto' }}>
         <ActionButton icon={MoreVertical} onClick={() => setShowMenu((s) => !s)} />
         {showMenu && (
-          <div className="absolute right-14 top-0 bg-gray-900/95 backdrop-blur-md rounded-xl shadow-2xl border border-white/10 min-w-[180px] py-2 z-20">
-            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors" onClick={(e) => { e.stopPropagation(); setShowMenu(false); }}>
+          <div className="absolute right-14 top-0 bg-gray-900/95 backdrop-blur-md rounded-xl shadow-2xl border border-white/10 min-w-[180px] py-2 z-[60]" style={{ pointerEvents: 'auto' }}>
+            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowMenu(false); }}>
               <Captions className="h-4 w-4 text-white/80" />
               <span>Vietsub</span>
             </button>
-            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors" onClick={(e) => { e.stopPropagation(); setShowMenu(false); }}>
+            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowMenu(false); }}>
               <Globe className="h-4 w-4 text-white/80" />
               <span>English</span>
             </button>
-            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors" onClick={(e) => { e.stopPropagation(); setShowMenu(false); }}>
+            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowMenu(false); }}>
               <Flag className="h-4 w-4 text-white/80" />
               <span>Tiếng Việt</span>
             </button>
