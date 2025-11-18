@@ -113,17 +113,22 @@ export function VideoActions({ video, vertical = true, onCommentClick, isMuted, 
     active,
     onClick,
     activeColor,
+    disabled,
   }: {
     icon: any;
     count?: number;
     active?: boolean;
     onClick: () => void;
     activeColor?: 'pink' | 'yellow';
+    disabled?: boolean;
   }) => (
     <button
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
       className="flex flex-col items-center gap-0.5 group"
-      disabled={likeMutation.isPending || bookmarkMutation.isPending}
+      disabled={!!disabled}
     >
       <div
         className={cn(
@@ -146,12 +151,12 @@ export function VideoActions({ video, vertical = true, onCommentClick, isMuted, 
   );
 
   const containerClass = vertical
-    ? 'flex flex-col gap-3'
-    : 'flex flex-row gap-3 items-center justify-center';
+    ? 'flex flex-col gap-3 pointer-events-auto z-10'
+    : 'flex flex-row gap-3 items-center justify-center pointer-events-auto z-10';
 
   return (
     <div className={containerClass}>
-      <ActionButton icon={Heart} count={likeCount} active={isLiked} onClick={handleLike} activeColor="pink" />
+      <ActionButton icon={Heart} count={likeCount} active={isLiked} onClick={handleLike} activeColor="pink" disabled={likeMutation.isPending} />
       <ActionButton
         icon={MessageCircle}
         count={(video as any).commentCount ?? (video as any).comments_count ?? 0}
@@ -164,21 +169,21 @@ export function VideoActions({ video, vertical = true, onCommentClick, isMuted, 
         active={false}
         onClick={handleShare}
       />
-      <ActionButton icon={Bookmark} active={isBookmarked} onClick={handleBookmark} activeColor="yellow" />
+      <ActionButton icon={Bookmark} active={isBookmarked} onClick={handleBookmark} activeColor="yellow" disabled={bookmarkMutation.isPending} />
       {/* More menu */}
       <div className="relative">
         <ActionButton icon={MoreVertical} onClick={() => setShowMenu((s) => !s)} />
         {showMenu && (
           <div className="absolute right-14 top-0 bg-gray-900/95 backdrop-blur-md rounded-xl shadow-2xl border border-white/10 min-w-[180px] py-2 z-20">
-            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors" onClick={() => setShowMenu(false)}>
+            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors" onClick={(e) => { e.stopPropagation(); setShowMenu(false); }}>
               <Captions className="h-4 w-4 text-white/80" />
               <span>Vietsub</span>
             </button>
-            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors" onClick={() => setShowMenu(false)}>
+            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors" onClick={(e) => { e.stopPropagation(); setShowMenu(false); }}>
               <Globe className="h-4 w-4 text-white/80" />
               <span>English</span>
             </button>
-            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors" onClick={() => setShowMenu(false)}>
+            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors" onClick={(e) => { e.stopPropagation(); setShowMenu(false); }}>
               <Flag className="h-4 w-4 text-white/80" />
               <span>Tiếng Việt</span>
             </button>

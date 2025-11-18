@@ -17,7 +17,12 @@ export function formatNumber(num: number): string {
 
 export function formatDate(date: string): string {
   const now = new Date();
-  const then = new Date(date);
+  // Backend trả về datetime không có timezone, coi như local time
+  // Nếu date không có 'Z' hoặc timezone offset, thêm 'Z' để coi như UTC
+  const dateStr = date.includes('Z') || date.includes('+') || date.includes('T') && date.split('T')[1].includes('-') 
+    ? date 
+    : date + 'Z';
+  const then = new Date(dateStr);
   const diffMs = now.getTime() - then.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);

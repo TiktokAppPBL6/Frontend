@@ -39,12 +39,6 @@ export function Upload() {
         return;
       }
 
-      // Validate file size (max 100MB)
-      if (selectedFile.size > 100 * 1024 * 1024) {
-        setErrors({ file: 'File quá lớn. Kích thước tối đa 100MB' });
-        return;
-      }
-
       // Validate video duration (max 120 seconds)
       const videoUrl = URL.createObjectURL(selectedFile);
       const video = document.createElement('video');
@@ -78,6 +72,12 @@ export function Upload() {
 
     if (!formData.title.trim()) {
       newErrors.title = 'Tiêu đề là bắt buộc';
+    } else if (formData.title.length > 150) {
+      newErrors.title = 'Tiêu đề không được vượt quá 150 ký tự';
+    }
+
+    if (formData.description && formData.description.length > 500) {
+      newErrors.description = 'Mô tả không được vượt quá 500 ký tự';
     }
 
     if (!file) {
@@ -91,7 +91,10 @@ export function Upload() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validate()) return;
+    if (!validate()) {
+      toast.error('Vui lòng không để trống tiêu đề');
+      return;
+    }
 
     uploadMutation.mutate({
       title: formData.title,
@@ -161,24 +164,78 @@ export function Upload() {
               </div>
 
               {/* Title */}
-              <FormInput
-                label="Tiêu đề"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                error={errors.title}
-                placeholder="Nhập tiêu đề video..."
-                required
-              />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-300">Tiêu đề <span className="text-red-500">*</span></label>
+                  <span className={`text-xs transition-colors ${
+                    formData.title.length > 150 
+                      ? "text-red-500 font-medium" 
+                      : formData.title.length > 135 
+                        ? "text-yellow-500" 
+                        : "text-gray-500"
+                  }`}>
+                    {formData.title.length}/150
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({ ...formData, title: value });
+                    // Realtime validation
+                    if (value.length > 150) {
+                      setErrors({ ...errors, title: 'Tiêu đề không được vượt quá 150 ký tự' });
+                    } else if (errors.title) {
+                      const newErrors = { ...errors };
+                      delete newErrors.title;
+                      setErrors(newErrors);
+                    }
+                  }}
+                  className="w-full rounded-md border border-gray-700 bg-[#121212] text-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE2C55] placeholder:text-gray-500"
+                  placeholder="Nhập tiêu đề video..."
+                />
+                {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
+                {formData.title.length > 150 && !errors.title && (
+                  <p className="text-sm text-red-500 font-medium">Vượt quá giới hạn!</p>
+                )}
+              </div>
 
               {/* Description */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Mô tả</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-300">Mô tả</label>
+                  <span className={`text-xs transition-colors ${
+                    formData.description.length > 500 
+                      ? "text-red-500 font-medium" 
+                      : formData.description.length > 450 
+                        ? "text-yellow-500" 
+                        : "text-gray-500"
+                  }`}>
+                    {formData.description.length}/500
+                  </span>
+                </div>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({ ...formData, description: value });
+                    // Realtime validation
+                    if (value.length > 500) {
+                      setErrors({ ...errors, description: 'Mô tả không được vượt quá 500 ký tự' });
+                    } else if (errors.description) {
+                      const newErrors = { ...errors };
+                      delete newErrors.description;
+                      setErrors(newErrors);
+                    }
+                  }}
                   className="w-full min-h-[100px] rounded-md border border-gray-700 bg-[#121212] text-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE2C55] placeholder:text-gray-500"
                   placeholder="Mô tả video của bạn..."
                 />
+                {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
+                {formData.description.length > 500 && !errors.description && (
+                  <p className="text-sm text-red-500 font-medium">Vượt quá giới hạn!</p>
+                )}
               </div>
 
               {/* Visibility */}

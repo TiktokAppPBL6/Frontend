@@ -254,7 +254,7 @@ export function VideoDetail() {
 
         {/* User Info & Description */}
         <div className="bg-[#1E1E1E] rounded-2xl p-6 mb-6 border border-gray-800">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-start gap-4 mb-4">
             {/* Avatar */}
             <button
               onClick={() => navigate(`/user/${ownerId}`)}
@@ -283,6 +283,26 @@ export function VideoDetail() {
               </button>
             </div>
 
+            {/* Visibility Badge */}
+            <div className="flex-shrink-0">
+              {video.visibility === 'hidden' ? (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 rounded-full border border-gray-700">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" strokeWidth="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" strokeWidth="2"/>
+                  </svg>
+                  <span className="text-gray-400 text-xs font-medium">Riêng tư</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FE2C55]/10 rounded-full border border-[#FE2C55]/20">
+                  <svg className="w-4 h-4 text-[#FE2C55]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span className="text-[#FE2C55] text-xs font-medium">Công khai</span>
+                </div>
+              )}
+            </div>
+
             {/* Follow Button - Chỉ hiển thị nếu không phải chính chủ */}
             {!isOwnVideo && ownerId && (
               <Button
@@ -303,8 +323,7 @@ export function VideoDetail() {
           <div className="space-y-2">
             <h1 className="text-white text-xl font-bold">{video.title}</h1>
             {video.description && (
-              <div className="text-gray-300 text-sm">
-                {showFullDescription || (video.description?.length || 0) <= 150 ? (
+              <div className="text-gray-300 text-sm">{showFullDescription || (video.description?.length || 0) <= 150 ? (
                   <>
                     <p className="whitespace-pre-wrap">{video.description}</p>
                     {(video.description?.length || 0) > 150 && (

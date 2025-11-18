@@ -168,18 +168,7 @@ export function Profile() {
 
               {/* Stats - TikTok Style */}
               <div className="flex items-center gap-6 mb-6">
-                <button
-                  onClick={() => {
-                    setFollowersModalTab('following');
-                    setFollowersModalOpen(true);
-                  }}
-                  className="group"
-                >
-                  <span className="font-bold text-xl text-white group-hover:text-gray-300 transition-colors">
-                    {formatNumber(followingCount)}
-                  </span>
-                  <span className="text-gray-400 text-sm ml-2">Đang follow</span>
-                </button>
+               
                 <button
                   onClick={() => {
                     setFollowersModalTab('followers');
@@ -192,18 +181,30 @@ export function Profile() {
                   </span>
                   <span className="text-gray-400 text-sm ml-2">Follower</span>
                 </button>
+                 <button
+                  onClick={() => {
+                    setFollowersModalTab('following');
+                    setFollowersModalOpen(true);
+                  }}
+                  className="group"
+                >
+                  <span className="font-bold text-xl text-white group-hover:text-gray-300 transition-colors">
+                    {formatNumber(followingCount)}
+                  </span>
+                  <span className="text-gray-400 text-sm ml-2">Đang follow</span>
+                </button>
                 <div>
                   <span className="font-bold text-xl text-white">{formatNumber(videosCount)}</span>
                   <span className="text-gray-400 text-sm ml-2">Thích</span>
                 </div>
               </div>
 
-              {/* Bio (if exists) */}
+              {/* Bio (if exists)
               {user.bio && (
                 <p className="text-white text-sm leading-relaxed mb-4">
                   {user.bio}
                 </p>
-              )}
+              )} */}
             </div>
           </div>
         </div>

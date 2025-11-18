@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { commentsApi } from '@/api/comments.api';
 import { Avatar } from '@/components/common/Avatar';
@@ -14,18 +14,27 @@ interface CommentsModalProps {
 
 export function CommentsModal({ videoId, onClose }: CommentsModalProps) {
   const queryClient = useQueryClient();
+  const commentsListRef = useRef<HTMLDivElement>(null);
   const { data, isLoading } = useQuery({
     queryKey: ['comments', videoId],
     queryFn: () => commentsApi.getVideoComments(videoId),
     enabled: !!videoId,
   });
   const [comment, setComment] = useState('');
+  const MAX_COMMENT_LENGTH = 500;
 
   const commentMutation = useMutation({
     mutationFn: commentsApi.createComment,
     onSuccess: () => {
       setComment('');
       queryClient.invalidateQueries({ queryKey: ['comments', videoId] });
+      
+      // Scroll xuống cuối để thấy comment mới
+      setTimeout(() => {
+        if (commentsListRef.current) {
+          commentsListRef.current.scrollTop = commentsListRef.current.scrollHeight;
+        }
+      }, 100);
     },
   });
 
@@ -54,7 +63,7 @@ export function CommentsModal({ videoId, onClose }: CommentsModalProps) {
         </div>
 
         {/* List */}
-        <div className={cn("flex-1 overflow-y-auto p-4 bg-[#121212]", isLoading && 'opacity-60')}>          
+        <div ref={commentsListRef} className={cn("flex-1 overflow-y-auto p-4 bg-[#121212]", isLoading && 'opacity-60')}>          
           <div className="space-y-3">
             {data?.comments?.map((c: any) => {
               // Response fields can be at top level or nested in c.user
@@ -92,26 +101,45 @@ export function CommentsModal({ videoId, onClose }: CommentsModalProps) {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (!comment.trim() || commentMutation.isPending) return;
+              if (!comment.trim() || commentMutation.isPending || comment.length > MAX_COMMENT_LENGTH) return;
               commentMutation.mutate({ videoId, content: comment.trim() });
             }}
-            className="flex items-center gap-3"
+            className="space-y-2"
           >
-            <Input
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Viết bình luận..."
-              className="flex-1 bg-[#121212] border-gray-700 text-white rounded-full px-4 py-2 focus:bg-[#121212] focus:border-[#FE2C55] focus:ring-2 focus:ring-[#FE2C55]/20 transition-all placeholder:text-gray-500"
-              disabled={commentMutation.isPending}
-            />
-            <Button 
-              type="submit" 
-              size="icon" 
-              className="bg-[#FE2C55] hover:bg-[#FE2C55]/90 rounded-full h-10 w-10 shadow-md hover:shadow-lg transition-all disabled:opacity-50" 
-              disabled={!comment.trim() || commentMutation.isPending}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-3">
+              <Input
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Viết bình luận..."
+                className="flex-1 bg-[#121212] border-gray-700 text-white rounded-full px-4 py-2 focus:bg-[#121212] focus:border-[#FE2C55] focus:ring-2 focus:ring-[#FE2C55]/20 transition-all placeholder:text-gray-500"
+                disabled={commentMutation.isPending}
+              />
+              <Button 
+                type="submit" 
+                size="icon" 
+                className="bg-[#FE2C55] hover:bg-[#FE2C55]/90 rounded-full h-10 w-10 shadow-md hover:shadow-lg transition-all disabled:opacity-50" 
+                disabled={!comment.trim() || commentMutation.isPending || comment.length > MAX_COMMENT_LENGTH}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+            {comment.length > 0 && (
+              <div className="flex items-center justify-between px-2">
+                <p className={cn(
+                  "text-xs transition-colors",
+                  comment.length > MAX_COMMENT_LENGTH 
+                    ? "text-red-500 font-medium" 
+                    : comment.length > MAX_COMMENT_LENGTH * 0.9 
+                      ? "text-yellow-500" 
+                      : "text-gray-500"
+                )}>
+                  {comment.length}/{MAX_COMMENT_LENGTH} ký tự
+                </p>
+                {comment.length > MAX_COMMENT_LENGTH && (
+                  <p className="text-red-500 text-xs font-medium">Vượt quá giới hạn!</p>
+                )}
+              </div>
+            )}
           </form>
         </div>
       </div>

@@ -19,6 +19,10 @@ export interface Video {
   shareCount?: number;
   isLiked?: boolean;
   isBookmarked?: boolean;
+  isFollowing?: boolean;
+  username: string;
+  fullName: string;
+  avatarUrl: string;
 }
 
 export interface VideoUploadRequest {

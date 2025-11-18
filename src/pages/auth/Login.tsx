@@ -12,7 +12,6 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [loginError, setLoginError] = useState('');
   
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
@@ -42,7 +41,6 @@ export function Login() {
     if (!validate()) return;
     
     setIsLoading(true);
-    // Không xóa loginError ở đây nữa, giữ nguyên để hiển thị nếu lỗi lại
     try {
       // Pass _skipRedirect to prevent global 401 redirect/reload on login failure
       const response = await authApi.login({ email, password, _skipRedirect: true });
@@ -51,13 +49,22 @@ export function Login() {
       navigate('/home');
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || 
-                          error?.response?.data?.message || 
+                          error?.response?.data?.message ||
+                          error?.response?.data?.error ||
                           'Đăng nhập thất bại';
       
-      if (errorMessage.toLowerCase().includes('incorrect email or password')) {
-        setLoginError('Email hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.');
+      // Handle specific backend errors
+      if (errorMessage.toLowerCase().includes('incorrect') || 
+          errorMessage.toLowerCase().includes('invalid') ||
+          errorMessage.toLowerCase().includes('wrong')) {
+        toast.error('Email hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.');
+      } else if (errorMessage.toLowerCase().includes('not found')) {
+        toast.error('Tài khoản không tồn tại. Vui lòng kiểm tra lại email.');
+      } else if (errorMessage.toLowerCase().includes('disabled') || 
+                 errorMessage.toLowerCase().includes('deactivated')) {
+        toast.error('Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ.');
       } else {
-        setLoginError(errorMessage);
+        toast.error(errorMessage);
       }
     } finally {
       setIsLoading(false);
@@ -84,15 +91,6 @@ export function Login() {
         </CardHeader>
         <CardContent className="pt-2">
           <form onSubmit={handleSubmit} className="space-y-3">
-            {loginError && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2.5 flex items-start gap-2">
-                <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                <p className="text-xs text-red-400">{loginError}</p>
-              </div>
-            )}
-            
             <FormInput
               label="Email"
               type="email"
@@ -118,6 +116,16 @@ export function Login() {
               placeholder="••••••••"
               disabled={isLoading}
             />
+            
+            {/* Forgot Password Link */}
+            <div className="text-right">
+              <Link 
+                to="/auth/forgot-password" 
+                className="text-sm text-gray-400 hover:text-[#FE2C55] transition-colors"
+              >
+                Quên mật khẩu?
+              </Link>
+            </div>
             
             <Button 
               type="submit" 

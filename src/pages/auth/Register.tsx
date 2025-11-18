@@ -24,27 +24,44 @@ export function Register() {
   const validate = () => {
     const newErrors: Record<string, string> = {};
     
-    if (!formData.email) {
+    // Email validation
+    if (!formData.email || formData.email.trim() === '') {
       newErrors.email = 'Email là bắt buộc';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email không hợp lệ';
+    } else if (formData.email.length > 255) {
+      newErrors.email = 'Email không được vượt quá 255 ký tự';
     }
     
-    if (!formData.username) {
+    // Username validation
+    if (!formData.username || formData.username.trim() === '') {
       newErrors.username = 'Tên người dùng là bắt buộc';
     } else if (formData.username.length < 3) {
       newErrors.username = 'Tên người dùng phải có ít nhất 3 ký tự';
+    } else if (formData.username.length > 50) {
+      newErrors.username = 'Tên người dùng không được vượt quá 50 ký tự';
     } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
       newErrors.username = 'Tên người dùng chỉ chứa chữ, số và dấu gạch dưới';
     }
     
-    if (!formData.password) {
+    // Full name validation (optional but has max length)
+    if (formData.fullName && formData.fullName.length > 100) {
+      newErrors.fullName = 'Họ và tên không được vượt quá 100 ký tự';
+    }
+    
+    // Password validation
+    if (!formData.password || formData.password.trim() === '') {
       newErrors.password = 'Mật khẩu là bắt buộc';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+    } else if (formData.password.length > 100) {
+      newErrors.password = 'Mật khẩu không được vượt quá 100 ký tự';
     }
     
-    if (formData.password !== formData.confirmPassword) {
+    // Confirm password validation
+    if (!formData.confirmPassword || formData.confirmPassword.trim() === '') {
+      newErrors.confirmPassword = 'Xác nhận mật khẩu là bắt buộc';
+    } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Mật khẩu không khớp';
     }
     
@@ -59,27 +76,84 @@ export function Register() {
     
     setIsLoading(true);
     try {
-      const response = await authApi.register({
+      await authApi.register({
         email: formData.email,
         username: formData.username,
         password: formData.password,
         fullName: formData.fullName || undefined,
       });
-      login(response.accessToken, response.user);
-      toast.success('Đăng ký thành công!');
-      navigate('/home');
+      toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
+      navigate('/auth/login');
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Đăng ký thất bại');
+      const errorMessage = error?.response?.data?.message || 
+                          error?.response?.data?.detail ||
+                          error?.response?.data?.error ||
+                          'Đăng ký thất bại';
+      
+      // Handle specific backend errors
+      if (errorMessage.toLowerCase().includes('email') ) {
+        toast.error('Email này đã được sử dụng. Vui lòng chọn email khác.');
+      } else if (errorMessage.toLowerCase().includes('user')) {
+        toast.error('Tên người dùng đã tồn tại. Vui lòng chọn tên khác.');
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
+    
+    // Validate realtime khi người dùng nhập
+    const newErrors: Record<string, string> = {};
+    
+    if (name === 'email') {
+      if (value.length > 255) {
+        newErrors.email = 'Email không được vượt quá 255 ký tự';
+      } else if (value && !/\S+@\S+\.\S+/.test(value)) {
+        newErrors.email = 'Email không hợp lệ';
+      }
+    } else if (name === 'username') {
+      if (value.length > 50) {
+        newErrors.username = 'Tên người dùng không được vượt quá 50 ký tự';
+      } else if (value.length > 0 && value.length < 3) {
+        newErrors.username = 'Tên người dùng phải có ít nhất 3 ký tự';
+      } else if (value && !/^[a-zA-Z0-9_]+$/.test(value)) {
+        newErrors.username = 'Tên người dùng chỉ chứa chữ, số và dấu gạch dưới';
+      }
+    } else if (name === 'fullName') {
+      if (value.length > 100) {
+        newErrors.fullName = 'Họ và tên không được vượt quá 100 ký tự';
+      }
+    } else if (name === 'password') {
+      if (value.length > 100) {
+        newErrors.password = 'Mật khẩu không được vượt quá 100 ký tự';
+      } else if (value.length > 0 && value.length < 6) {
+        newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+      }
+    } else if (name === 'confirmPassword') {
+      if (value !== formData.password) {
+        newErrors.confirmPassword = 'Mật khẩu không khớp';
+      }
+    }
+    
+    // Update errors
+    setErrors((prev) => {
+      const updatedErrors = { ...prev };
+      // Xóa lỗi cũ của field này
+      delete updatedErrors[name];
+      // Thêm lỗi mới nếu có
+      if (newErrors[name]) {
+        updatedErrors[name] = newErrors[name];
+      }
+      return updatedErrors;
+    });
   };
 
   return (
@@ -124,6 +198,7 @@ export function Register() {
               placeholder="username123"
               required
               disabled={isLoading}
+              minLength={3}
             />
             
             <FormInput
@@ -132,6 +207,8 @@ export function Register() {
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
+              error={errors.fullName}
+              required
               placeholder="Nguyễn Văn A"
               disabled={isLoading}
             />
@@ -146,6 +223,7 @@ export function Register() {
               placeholder="••••••••"
               required
               disabled={isLoading}
+              minLength={6}
             />
             
             <FormInput
@@ -158,6 +236,7 @@ export function Register() {
               placeholder="••••••••"
               required
               disabled={isLoading}
+              minLength={6}
             />
             
             <Button 
