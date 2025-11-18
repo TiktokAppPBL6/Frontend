@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập Google - Toptop</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #121212;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+        }
+        .logo {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(to right, #FE2C55, #FF6B9D, #00F2EA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+        .message {
+            font-size: 1.2rem;
+            color: #9ca3af;
+            margin-bottom: 1.5rem;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333;
+            border-top-color: #FE2C55;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .error {
+            color: #FE2C55;
+            margin-top: 1rem;
+        }
+        .info {
+            color: #00F2EA;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Toptop</div>
+        <div class="message" id="message">Đang xử lý đăng nhập Google...</div>
+        <div class="spinner" id="spinner"></div>
+        <div class="error" id="error" style="display: none;"></div>
+        <div class="info" id="info" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function handleGoogleCallback() {
+            const messageEl = document.getElementById('message');
+            const spinnerEl = document.getElementById('spinner');
+            const errorEl = document.getElementById('error');
+            const infoEl = document.getElementById('info');
+            
+            try {
+                console.log('🔍 Google callback handler started');
+                
+                // Get URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const code = urlParams.get('code');
+                const error = urlParams.get('error');
+                
+                // Check if we already have a token (redirected from backend)
+                const token = urlParams.get('access_token') || urlParams.get('token');
+                
+                if (token) {
+                    console.log('✅ Token found in URL, redirecting to app...');
+                    messageEl.textContent = 'Đang hoàn tất đăng nhập...';
+                    window.location.href = '/auth/google/callback?access_token=' + encodeURIComponent(token);
+                    return;
+                }
+                
+                if (error) {
+                    throw new Error('Google OAuth error: ' + error);
+                }
+                
+                if (!code) {
+                    throw new Error('No authorization code received');
+                }
+                
+                console.log('✅ Authorization code received');
+                messageEl.textContent = 'Đang xác thực với Google...';
+                
+                // Call backend to exchange code for token
+                console.log('📡 Calling backend to exchange code...');
+                const backendUrl = 'http://localhost:8000/api/v1/auth/google/callback?' + urlParams.toString();
+                
+                infoEl.textContent = 'Đang kết nối với server...';
+                infoEl.style.display = 'block';
+                
+                const response = await fetch(backendUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Backend response not OK: ' + response.status);
+                }
+                
+                const data = await response.json();
+                console.log('📦 Backend response:', data);
+                
+                const accessToken = data.access_token || data.accessToken;
+                
+                if (!accessToken) {
+                    throw new Error('No access token in backend response');
+                }
+                
+                console.log('✅ Token received, redirecting to app...');
+                messageEl.textContent = 'Đăng nhập thành công! Đang chuyển hướng...';
+                infoEl.style.display = 'none';
+                
+                // Redirect to React app with token
+                window.location.href = '/auth/google/callback?access_token=' + encodeURIComponent(accessToken);
+                
+            } catch (err) {
+                console.error('❌ Error:', err);
+                spinnerEl.style.display = 'none';
+                messageEl.textContent = 'Đăng nhập thất bại';
+                errorEl.textContent = err.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
+                errorEl.style.display = 'block';
+                infoEl.style.display = 'none';
+                
+                // Redirect to login after 3 seconds
+                setTimeout(() => {
+                    window.location.href = '/auth/login';
+                }, 3000);
+            }
+        }
+        
+        // Run on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', handleGoogleCallback);
+        } else {
+            handleGoogleCallback();
+        }
+    </script>
+</body>
+</html>

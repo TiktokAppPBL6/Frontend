@@ -8,6 +8,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (token: string, user: User) => void;
+  loginWithToken: (token: string) => Promise<void>;
   logout: () => void;
   fetchMe: () => Promise<void>;
   updateUser: (user: User) => void;
@@ -23,6 +24,27 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.setItem('accessToken', token);
     localStorage.setItem('user', JSON.stringify(user));
     set({ token, user, isAuthenticated: true });
+  },
+
+  loginWithToken: async (token: string) => {
+    console.log('🔑 loginWithToken: Saving token and setting authenticated');
+    localStorage.setItem('accessToken', token);
+    set({ token, isAuthenticated: true, isLoading: true });
+    
+    try {
+      // Fetch user info with the new token
+      console.log('👤 loginWithToken: Fetching user info...');
+      const user = await usersApi.getMe();
+      console.log('✅ loginWithToken: User fetched successfully');
+      localStorage.setItem('user', JSON.stringify(user));
+      set({ user, isLoading: false });
+    } catch (error) {
+      console.error('❌ loginWithToken: Failed to fetch user:', error);
+      // Still keep authenticated, will retry on next app load
+      set({ isLoading: false });
+    }
+    
+    console.log('✅ loginWithToken: Complete');
   },
 
   logout: () => {

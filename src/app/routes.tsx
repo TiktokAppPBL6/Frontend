@@ -8,6 +8,7 @@ import { VideoSkeleton } from '@/components/ui/skeleton';
 const Intro = lazy(() => import('@/pages/Intro').then(m => ({ default: m.Intro })));
 const Login = lazy(() => import('@/pages/auth/Login').then(m => ({ default: m.Login })));
 const Register = lazy(() => import('@/pages/auth/Register').then(m => ({ default: m.Register })));
+const GoogleCallback = lazy(() => import('@/pages/auth/GoogleCallback').then(m => ({ default: m.GoogleCallback })));
 const Home = lazy(() => import('@/pages/Home').then(m => ({ default: m.Home })));
 const Following = lazy(() => import('@/pages/Following').then(m => ({ default: m.Following })));
 const Bookmarks = lazy(() => import('@/pages/Bookmarks').then(m => ({ default: m.Bookmarks })));
@@ -47,6 +48,7 @@ export function AppRoutes() {
           <Route path="/" element={<Intro />} />
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
+          <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
           {/* Protected routes */}
           <Route

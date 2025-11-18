@@ -38,8 +38,19 @@ export const authApi = {
   // Register
   register: async (data: RegisterRequest): Promise<AuthResponse> => {
     try {
-      const response = await axiosClient.post<AuthResponse>('/auth/register', data);
-      return response.data;
+      const response = await axiosClient.post<any>('/auth/register', data);
+      
+      // Normalize response - handle both snake_case and camelCase
+      const responseData = response.data;
+      const accessToken = responseData.access_token || responseData.accessToken;
+      const user = responseData.user;
+      
+      console.log('Register response:', { accessToken, user });
+      
+      return {
+        accessToken,
+        user,
+      };
     } catch (error) {
       throw error;
     }
@@ -79,6 +90,53 @@ export const authApi = {
         current_password: data.currentPassword,
         new_password: data.newPassword,
       });
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Google Login
+  googleLogin: async (credential: string): Promise<AuthResponse> => {
+    try {
+      const response = await axiosClient.post<any>('/auth/google/login', {
+        credential,
+      });
+      
+      // Normalize response - handle both snake_case and camelCase
+      const responseData = response.data;
+      const accessToken = responseData.access_token || responseData.accessToken;
+      const user = responseData.user;
+      
+      console.log('Google login response:', { accessToken, user });
+      
+      return {
+        accessToken,
+        user,
+      };
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Exchange Google authorization code for token
+  googleCallback: async (code: string): Promise<AuthResponse> => {
+    try {
+      // Call backend callback endpoint directly with code
+      const response = await axiosClient.get<any>(`/auth/google/callback`, {
+        params: { code }
+      });
+      
+      // Normalize response
+      const responseData = response.data;
+      const accessToken = responseData.access_token || responseData.accessToken;
+      const user = responseData.user;
+      
+      console.log('Google callback response:', { accessToken, user });
+      
+      return {
+        accessToken,
+        user,
+      };
     } catch (error) {
       throw error;
     }
