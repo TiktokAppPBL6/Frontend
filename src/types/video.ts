@@ -46,3 +46,17 @@ export interface VideosResponse {
   pageSize: number;
   hasMore: boolean;
 }
+
+export interface SubtitleTimestamp {
+  text: string;
+  start: number;
+  end: number;
+  text_vi: string;
+}
+
+export interface VideoTranscript {
+  video_id: number;
+  title: string;
+  transcript: string;
+  timestamps: SubtitleTimestamp[];
+}

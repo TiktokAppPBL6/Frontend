@@ -5,6 +5,7 @@ import { videosApi } from '@/api/videos.api';
 import { commentsApi } from '@/api/comments.api';
 import { socialApi } from '@/api/social.api';
 import { VideoActions } from '@/components/video/VideoActions';
+import { SubtitleDisplay } from '@/components/video/SubtitleDisplay';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Send } from 'lucide-react';
 import { formatDate, getMediaUrl, getAvatarUrl } from '@/lib/utils';
@@ -18,6 +19,7 @@ export function VideoDetail() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const currentTimeRef = useRef<number>(0);
   
   const [comment, setComment] = useState('');
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -26,6 +28,7 @@ export function VideoDetail() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [avatarError, setAvatarError] = useState(false);
+  const [subtitleLanguage, setSubtitleLanguage] = useState<'off' | 'en' | 'vi'>('off');
 
   const { data: video, isLoading: videoLoading } = useQuery({
     queryKey: ['video', videoId],
@@ -54,6 +57,25 @@ export function VideoDetail() {
     enabled: !!videoId,
   });
 
+  // Fetch video transcript/subtitles
+  const { data: transcriptData } = useQuery({
+    queryKey: ['video-transcript', videoId],
+    queryFn: () => videosApi.getVideoTranscript(videoId),
+    enabled: subtitleLanguage !== 'off' && !!videoId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Debug: Log transcript data
+  useEffect(() => {
+    if (transcriptData && subtitleLanguage !== 'off') {
+      console.log('📝 Transcript loaded:', {
+        timestamps: transcriptData.timestamps?.length,
+        firstTimestamp: transcriptData.timestamps?.[0],
+        language: subtitleLanguage
+      });
+    }
+  }, [transcriptData, subtitleLanguage]);
+
   // Normalize comments data - API returns { comments: [], total: number }
   const commentsList = commentsData?.comments || [];
 
@@ -65,6 +87,10 @@ export function VideoDetail() {
     const updateProgress = () => {
       const progress = (video.currentTime / video.duration) * 100;
       setProgress(progress || 0);
+      currentTimeRef.current = video.currentTime;
+      if (subtitleLanguage !== 'off') {
+        console.log('⏱️ VideoDetail - Current time:', video.currentTime, 'Ref:', currentTimeRef.current);
+      }
     };
 
     video.addEventListener('timeupdate', updateProgress);
@@ -194,31 +220,33 @@ export function VideoDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-[#121212]">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-[#121212]/95 backdrop-blur-sm border-b border-gray-800">
-        <div className="container mx-auto max-w-4xl px-4 py-3">
+    <div className="bg-black">
+      {/* Fixed Header - Transparent overlay */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/70 to-transparent">
+        <div className="px-4 py-3">
           <Button
             variant="ghost"
             onClick={() => navigate(-1)}
-            className="text-white hover:bg-gray-800"
+            size="sm"
+            className="text-white hover:bg-white/10 text-xs backdrop-blur-sm"
           >
-            <ArrowLeft className="h-5 w-5 mr-2" />
+            <ArrowLeft className="h-4 w-4 mr-1" />
             Quay lại
           </Button>
         </div>
       </div>
 
-      <div className="container mx-auto max-w-4xl px-4 py-6">
-        {/* Video Player */}
-        <div className="relative flex items-end justify-center gap-3 mb-6">
-          {/* Video Container - Bo tròn, giữ nguyên tỷ lệ khung hình */}
-          <div className="relative max-w-[600px] max-h-full flex items-center justify-center">
+      {/* Video Section - Full screen */}
+      <div className="h-screen flex items-center justify-center bg-black relative">
+        {/* Main Container with Video and Actions Side by Side */}
+        <div className="relative flex items-end justify-center gap-4 px-4">
+          {/* Video Container - Modern, clean design */}
+          <div className="relative max-w-[800px] max-h-full flex items-center justify-center group">
             <video
               ref={videoRef}
               src={getMediaUrl(video.hlsUrl || video.url)}
               poster={getMediaUrl(video.thumbUrl)}
-              className="max-w-full max-h-[75vh] object-contain cursor-pointer rounded-3xl shadow-2xl"
+              className="max-w-full max-h-[calc(100vh-40px)] object-contain cursor-pointer rounded-3xl shadow-2xl"
               loop
               playsInline
               muted={isMuted}
@@ -226,20 +254,90 @@ export function VideoDetail() {
               autoPlay
             />
 
-            {/* Progress Bar - Interactive, slightly above bottom for rounded corners */}
+            {/* Subtitles - Smart positioning to avoid UI overlap */}
+            {subtitleLanguage !== 'off' && transcriptData?.timestamps && (
+              <SubtitleDisplay
+                timestamps={transcriptData.timestamps}
+                currentTimeRef={currentTimeRef}
+                language={subtitleLanguage}
+                className="bottom-5"
+              />
+            )}
+
+            {/* Progress Bar - Minimal, elegant */}
             <div 
-              className="absolute bottom-2 left-2 right-2 h-1 bg-white/20 rounded-full cursor-pointer group hover:h-1.5 transition-all"
+              className="absolute bottom-2 left-2 right-2 h-0.5 bg-white/15 rounded-full cursor-pointer group/progress hover:h-1 transition-all z-10 opacity-0 group-hover:opacity-100"
               onClick={handleProgressClick}
+              style={{ pointerEvents: 'auto' }}
             >
               <div 
-                className="h-full bg-white rounded-full transition-all duration-100 group-hover:bg-[#FE2C55]"
+                className="h-full bg-gradient-to-r from-[#FE2C55] to-[#FF6B9D] rounded-full transition-all duration-100 relative"
                 style={{ width: `${progress}%` }}
-              />
+              >
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover/progress:opacity-100 transition-opacity" />
+              </div>
+            </div>
+
+            {/* Bottom Gradient Overlay for better text readability */}
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent rounded-b-3xl pointer-events-none" />
+
+            {/* User Info & Title - Compact, elegant at bottom */}
+            <div className="absolute bottom-6 left-4 right-4 pointer-events-auto z-10">
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-bold text-sm drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                      @{ownerUsername}
+                    </span>
+                    {isOwnVideo && (
+                      <span className="text-xs px-1.5 py-0.5 bg-white/20 backdrop-blur-sm rounded text-white/90">(Bạn)</span>
+                    )}
+                  </div>
+                  <p className="text-white text-xs sm:text-sm font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] line-clamp-1 leading-tight">
+                    {video.title}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Video Actions Column */}
-          <div className="flex-shrink-0 flex flex-col items-center gap-5 pb-1">
+          {/* Actions Column - Next to video, aligned with video bottom */}
+          <div className="flex-shrink-0 flex flex-col items-center gap-4 pb-1 relative z-50" style={{ pointerEvents: 'auto' }}>
+            {/* Avatar with Follow Button */}
+            <div className="relative w-12 pb-1" style={{ pointerEvents: 'auto' }}>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(`/user/${ownerId}`);
+                }}
+                className="block transition-transform hover:scale-105 cursor-pointer"
+              >
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 shadow-lg">
+                  <img
+                    src={avatarError ? '/avatar.jpg' : ownerAvatar}
+                    alt={ownerUsername}
+                    className="w-full h-full object-cover"
+                    onError={() => setAvatarError(true)}
+                  />
+                </div>
+              </button>
+              {!isOwnVideo && ownerId && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!followMutation.isPending) handleFollowClick();
+                  }}
+                  disabled={followMutation.isPending}
+                  aria-label={isFollowing ? 'Bỏ theo dõi' : 'Theo dõi'}
+                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#FE2C55] text-white flex items-center justify-center text-sm font-bold shadow-md ring-2 ring-white hover:brightness-110 disabled:opacity-70 transition-all cursor-pointer"
+                >
+                  {isFollowing ? '✓' : '+'}
+                </button>
+              )}
+            </div>
+
             <VideoActions
               video={video}
               onCommentClick={() => {
@@ -248,13 +346,19 @@ export function VideoDetail() {
               }}
               isMuted={isMuted}
               onMuteToggle={toggleMute}
+              subtitleLanguage={subtitleLanguage}
+              onSubtitleChange={setSubtitleLanguage}
             />
           </div>
         </div>
+      </div>
 
-        {/* User Info & Description */}
-        <div className="bg-[#1E1E1E] rounded-2xl p-6 mb-6 border border-gray-800">
-          <div className="flex items-start gap-4 mb-4">
+      {/* Content Section - Scroll to see */}
+      <div className="bg-[#121212] min-h-screen">
+        <div className="container mx-auto max-w-4xl px-4 py-6">
+          {/* User Info & Description */}
+          <div className="bg-[#1E1E1E] rounded-2xl p-6 mb-6 border border-gray-800">
+            <div className="flex items-start gap-4 mb-4">
             {/* Avatar */}
             <button
               onClick={() => navigate(`/user/${ownerId}`)}
@@ -350,11 +454,11 @@ export function VideoDetail() {
             )}
             <p className="text-gray-500 text-xs">{formatDate(video.createdAt)}</p>
           </div>
-        </div>
+          </div>
 
-        {/* Comments Section */}
-        <div id="comments-section" className="bg-[#1E1E1E] rounded-2xl p-6 border border-gray-800">
-          <h3 className="text-white text-lg font-bold mb-4">
+          {/* Comments Section */}
+          <div id="comments-section" className="bg-[#1E1E1E] rounded-2xl p-6 border border-gray-800">
+            <h3 className="text-white text-lg font-bold mb-4">
             Bình luận ({commentsList?.length || 0})
           </h3>
 
@@ -442,6 +546,7 @@ export function VideoDetail() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

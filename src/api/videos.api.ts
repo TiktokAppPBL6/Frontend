@@ -4,6 +4,7 @@ import type {
   VideoUploadRequest,
   VideoUpdateRequest,
   VideosResponse,
+  VideoTranscript,
   PaginationParams,
   SearchParams,
 } from '@/types';
@@ -152,6 +153,16 @@ export const videosApi = {
   deleteVideo: async (videoId: number): Promise<void> => {
     try {
       await axiosClient.delete(`/videos/${videoId}`);
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get video transcript/subtitles
+  getVideoTranscript: async (videoId: number): Promise<VideoTranscript> => {
+    try {
+      const response = await axiosClient.get<VideoTranscript>(`/videos/${videoId}/transcript`);
+      return response.data;
     } catch (error) {
       throw error;
     }

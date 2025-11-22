@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo, useCallback } from 'react';
 import { Video } from '@/types';
-import { Heart, MessageCircle, Share2, Bookmark, MoreVertical, Globe, Flag, Captions, Volume2, VolumeX } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, Captions, Volume2, VolumeX } from 'lucide-react';
 import { cn, formatNumber } from '@/lib/utils';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { socialApi } from '@/api/social.api';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -14,9 +14,11 @@ interface VideoActionsProps {
   onCommentClick?: () => void;
   isMuted?: boolean;
   onMuteToggle?: () => void;
+  subtitleLanguage?: 'off' | 'en' | 'vi';
+  onSubtitleChange?: (lang: 'off' | 'en' | 'vi') => void;
 }
 
-export function VideoActions({ video, vertical = true, onCommentClick, isMuted, onMuteToggle }: VideoActionsProps) {
+function VideoActionsComponent({ video, vertical = true, onCommentClick, isMuted, onMuteToggle, subtitleLanguage = 'off', onSubtitleChange }: VideoActionsProps) {
   const currentUser = useAuthStore((s) => s.user);
   const initialIsLiked = (video as any).isLiked ?? (video as any).is_liked;
   const initialLikeCount = (video as any).likeCount ?? (video as any).likes_count ?? 0;
@@ -24,8 +26,7 @@ export function VideoActions({ video, vertical = true, onCommentClick, isMuted, 
   const [isLiked, setIsLiked] = useState<boolean>(initialIsLiked ?? false);
   const [isBookmarked, setIsBookmarked] = useState<boolean>(initialIsBookmarked);
   const [likeCount, setLikeCount] = useState<number>(initialLikeCount);
-  const [showMenu, setShowMenu] = useState<boolean>(false);
-  const queryClient = useQueryClient();
+  const [showSubtitleMenu, setShowSubtitleMenu] = useState<boolean>(false);
   const navigate = useNavigate();
   const needsIsLiked = initialIsLiked === undefined && !!currentUser?.id;
   const needsLikeCount = (video as any).likeCount === undefined && (video as any).likes_count === undefined;
@@ -54,9 +55,7 @@ export function VideoActions({ video, vertical = true, onCommentClick, isMuted, 
     onSuccess: (_, liked) => {
       setIsLiked(liked);
       setLikeCount((prev) => (liked ? prev + 1 : Math.max(0, prev - 1)));
-      queryClient.invalidateQueries({ queryKey: ['videos'] });
-      queryClient.invalidateQueries({ queryKey: ['video', video.id] });
-      queryClient.invalidateQueries({ queryKey: ['video-likes', video.id] });
+      // Don't invalidate to prevent reload - optimistic update is enough
     },
     onError: () => {
       toast.error('Không thể thực hiện hành động này');
@@ -69,7 +68,7 @@ export function VideoActions({ video, vertical = true, onCommentClick, isMuted, 
     onSuccess: (_, bookmarked) => {
       setIsBookmarked(bookmarked);
       toast.success(bookmarked ? 'Đã lưu video' : 'Đã bỏ lưu video');
-      queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+      // Don't invalidate to prevent reload
     },
     onError: () => {
       toast.error('Không thể thực hiện hành động này');
@@ -107,6 +106,11 @@ export function VideoActions({ video, vertical = true, onCommentClick, isMuted, 
     bookmarkMutation.mutate(!isBookmarked);
   };
 
+  const handleSubtitleSelect = useCallback((lang: 'off' | 'en' | 'vi') => {
+    onSubtitleChange?.(lang);
+    setShowSubtitleMenu(false);
+  }, [onSubtitleChange]);
+
   const ActionButton = ({
     icon: Icon,
     count,
@@ -114,13 +118,15 @@ export function VideoActions({ video, vertical = true, onCommentClick, isMuted, 
     onClick,
     activeColor,
     disabled,
+    label,
   }: {
     icon: any;
     count?: number;
     active?: boolean;
     onClick: () => void;
-    activeColor?: 'pink' | 'yellow';
+    activeColor?: 'pink' | 'yellow' | 'blue';
     disabled?: boolean;
+    label?: string;
   }) => (
     <button
       onClick={(e) => {
@@ -128,24 +134,28 @@ export function VideoActions({ video, vertical = true, onCommentClick, isMuted, 
         e.stopPropagation();
         onClick();
       }}
-      className="flex flex-col items-center gap-0.5 group relative cursor-pointer"
+      className="flex flex-col items-center gap-1 group relative cursor-pointer"
       disabled={!!disabled}
       style={{ pointerEvents: 'auto' }}
+      aria-label={label}
     >
       <div
         className={cn(
-          'w-10 h-10 rounded-full flex items-center justify-center transition-all backdrop-blur-md cursor-pointer',
-          'bg-gray-900/70 hover:bg-gray-900/80 border border-white/10',
-          'shadow-lg hover:scale-110 active:scale-95',
-          active && (activeColor === 'yellow'
-            ? 'bg-yellow-400/90 text-white hover:bg-yellow-500/90 border-yellow-400/30'
-            : 'bg-[#FE2C55]/90 text-white hover:bg-[#FE2C55] border-[#FE2C55]/30')
+          'w-12 h-12 rounded-full flex items-center justify-center transition-colors cursor-pointer',
+          'bg-gray-900/90 hover:bg-gray-800 border border-gray-700/60',
+          'shadow-xl',
+          active && (
+            activeColor === 'yellow' ? 'bg-yellow-500 hover:bg-yellow-600 border-yellow-400 text-white' :
+            activeColor === 'blue' ? 'bg-blue-500 hover:bg-blue-600 border-blue-400 text-white' :
+            'bg-[#FE2C55] hover:bg-[#fe1744] border-[#FE2C55] text-white'
+          ),
+          !active && 'text-white'
         )}
       >
-        <Icon className={cn('h-5 w-5 text-white', active && 'fill-current')} />
+        <Icon className={cn('h-5 w-5', active && 'fill-current')} strokeWidth={2} />
       </div>
       {count !== undefined && (
-        <span className="text-[11px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+        <span className="text-xs font-bold text-white drop-shadow-lg">
           {formatNumber(count)}
         </span>
       )}
@@ -153,52 +163,120 @@ export function VideoActions({ video, vertical = true, onCommentClick, isMuted, 
   );
 
   const containerClass = vertical
-    ? 'flex flex-col gap-3 pointer-events-auto relative z-50'
-    : 'flex flex-row gap-3 items-center justify-center pointer-events-auto relative z-50';
+    ? 'flex flex-col gap-4 pointer-events-auto relative z-50'
+    : 'flex flex-row gap-4 items-center justify-center pointer-events-auto relative z-50';
 
   return (
     <div className={containerClass}>
-      <ActionButton icon={Heart} count={likeCount} active={isLiked} onClick={handleLike} activeColor="pink" disabled={likeMutation.isPending} />
+      <ActionButton 
+        icon={Heart} 
+        count={likeCount} 
+        active={isLiked} 
+        onClick={handleLike} 
+        activeColor="pink" 
+        disabled={likeMutation.isPending}
+        label={isLiked ? "Bỏ thích" : "Thích"}
+      />
       <ActionButton
         icon={MessageCircle}
         count={(video as any).commentCount ?? (video as any).comments_count ?? 0}
         active={false}
         onClick={handleComment}
+        label="Bình luận"
+      />
+      <ActionButton
+        icon={Bookmark}
+        active={isBookmarked}
+        onClick={handleBookmark}
+        activeColor="yellow"
+        disabled={bookmarkMutation.isPending}
+        label={isBookmarked ? "Bỏ lưu" : "Lưu video"}
       />
       <ActionButton
         icon={Share2}
         count={(video as any).shareCount ?? (video as any).shares_count}
         active={false}
         onClick={handleShare}
+        label="Chia sẻ"
       />
-      <ActionButton icon={Bookmark} active={isBookmarked} onClick={handleBookmark} activeColor="yellow" disabled={bookmarkMutation.isPending} />
-      {/* More menu */}
+      
+      {/* Subtitle Menu */}
       <div className="relative z-50" style={{ pointerEvents: 'auto' }}>
-        <ActionButton icon={MoreVertical} onClick={() => setShowMenu((s) => !s)} />
-        {showMenu && (
-          <div className="absolute right-14 top-0 bg-gray-900/95 backdrop-blur-md rounded-xl shadow-2xl border border-white/10 min-w-[180px] py-2 z-[60]" style={{ pointerEvents: 'auto' }}>
-            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowMenu(false); }}>
-              <Captions className="h-4 w-4 text-white/80" />
-              <span>Vietsub</span>
+        <ActionButton 
+          icon={Captions} 
+          active={subtitleLanguage !== 'off'}
+          activeColor="blue"
+          onClick={() => setShowSubtitleMenu((s) => !s)}
+          label="Phụ đề"
+        />
+        {showSubtitleMenu && (
+          <div className="absolute right-16 bottom-0 bg-black/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700/80 min-w-[160px] py-2 z-[60]">
+            <div className="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wide">Phụ đề</div>
+            <button 
+              className={cn(
+                "w-full px-4 py-2.5 flex items-center justify-between text-sm text-white hover:bg-white/10 transition-colors cursor-pointer",
+                subtitleLanguage === 'off' && "bg-white/5"
+              )} 
+              onClick={(e) => { 
+                e.preventDefault(); 
+                e.stopPropagation(); 
+                handleSubtitleSelect('off');
+              }}
+            >
+              <span>Tắt</span>
+              {subtitleLanguage === 'off' && <span className="text-[#FE2C55]">✓</span>}
             </button>
-            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowMenu(false); }}>
-              <Globe className="h-4 w-4 text-white/80" />
+            <button 
+              className={cn(
+                "w-full px-4 py-2.5 flex items-center justify-between text-sm text-white hover:bg-white/10 transition-colors cursor-pointer",
+                subtitleLanguage === 'en' && "bg-white/5"
+              )} 
+              onClick={(e) => { 
+                e.preventDefault(); 
+                e.stopPropagation(); 
+                handleSubtitleSelect('en');
+              }}
+            >
               <span>English</span>
+              {subtitleLanguage === 'en' && <span className="text-[#FE2C55]">✓</span>}
             </button>
-            <button className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowMenu(false); }}>
-              <Flag className="h-4 w-4 text-white/80" />
+            <button 
+              className={cn(
+                "w-full px-4 py-2.5 flex items-center justify-between text-sm text-white hover:bg-white/10 transition-colors cursor-pointer",
+                subtitleLanguage === 'vi' && "bg-white/5"
+              )} 
+              onClick={(e) => { 
+                e.preventDefault(); 
+                e.stopPropagation(); 
+                handleSubtitleSelect('vi');
+              }}
+            >
               <span>Tiếng Việt</span>
+              {subtitleLanguage === 'vi' && <span className="text-[#FE2C55]">✓</span>}
             </button>
           </div>
         )}
       </div>
+
       {/* Mute/Unmute button */}
       {onMuteToggle && (
         <ActionButton 
           icon={isMuted ? VolumeX : Volume2} 
           onClick={onMuteToggle}
+          active={!isMuted}
+          label={isMuted ? "Bật âm thanh" : "Tắt âm thanh"}
         />
       )}
     </div>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders
+export const VideoActions = memo(VideoActionsComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.video.id === nextProps.video.id &&
+    prevProps.isMuted === nextProps.isMuted &&
+    prevProps.subtitleLanguage === nextProps.subtitleLanguage &&
+    prevProps.vertical === nextProps.vertical
+  );
+});

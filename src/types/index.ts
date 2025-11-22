@@ -1,5 +1,5 @@
 export type { User, AuthResponse, LoginRequest, RegisterRequest, ID } from './user';
-export type { Video, VideoUploadRequest, VideoUpdateRequest, VideosResponse } from './video';
+export type { Video, VideoUploadRequest, VideoUpdateRequest, VideosResponse, VideoTranscript, SubtitleTimestamp } from './video';
 export type { Comment, CommentCreateRequest, CommentUpdateRequest, CommentsResponse } from './comment';
 export type { Notification, NotificationsResponse } from './notification';
 export type { Message, Conversation, MessageSendRequest, MessagesResponse, InboxResponse } from './message';
