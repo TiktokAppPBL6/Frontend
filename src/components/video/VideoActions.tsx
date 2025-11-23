@@ -1,6 +1,6 @@
 import { useEffect, useState, memo, useCallback } from 'react';
 import { Video } from '@/types';
-import { Heart, MessageCircle, Share2, Bookmark, Captions, Volume2, VolumeX } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, Captions, Volume2, VolumeX, Languages } from 'lucide-react';
 import { cn, formatNumber } from '@/lib/utils';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { socialApi } from '@/api/social.api';
@@ -16,9 +16,11 @@ interface VideoActionsProps {
   onMuteToggle?: () => void;
   subtitleLanguage?: 'off' | 'en' | 'vi';
   onSubtitleChange?: (lang: 'off' | 'en' | 'vi') => void;
+  isDubbing?: boolean;
+  onDubbingToggle?: () => void;
 }
 
-function VideoActionsComponent({ video, vertical = true, onCommentClick, isMuted, onMuteToggle, subtitleLanguage = 'off', onSubtitleChange }: VideoActionsProps) {
+function VideoActionsComponent({ video, vertical = true, onCommentClick, isMuted, onMuteToggle, subtitleLanguage = 'off', onSubtitleChange, isDubbing = false, onDubbingToggle }: VideoActionsProps) {
   const currentUser = useAuthStore((s) => s.user);
   const initialIsLiked = (video as any).isLiked ?? (video as any).is_liked;
   const initialLikeCount = (video as any).likeCount ?? (video as any).likes_count ?? 0;
@@ -258,6 +260,17 @@ function VideoActionsComponent({ video, vertical = true, onCommentClick, isMuted
         )}
       </div>
 
+      {/* Dubbing Toggle - Show if video has audio_vi or has_dubbing */}
+      {(video.has_dubbing || video.audio_vi) && onDubbingToggle && (
+        <ActionButton 
+          icon={Languages} 
+          onClick={onDubbingToggle}
+          active={isDubbing}
+          activeColor="blue"
+          label={isDubbing ? "Audio gốc (EN)" : "Lồng tiếng (VI)"}
+        />
+      )}
+
       {/* Mute/Unmute button */}
       {onMuteToggle && (
         <ActionButton 
@@ -276,6 +289,7 @@ export const VideoActions = memo(VideoActionsComponent, (prevProps, nextProps) =
   return (
     prevProps.video.id === nextProps.video.id &&
     prevProps.isMuted === nextProps.isMuted &&
+    prevProps.isDubbing === nextProps.isDubbing &&
     prevProps.subtitleLanguage === nextProps.subtitleLanguage &&
     prevProps.vertical === nextProps.vertical
   );

@@ -15,8 +15,6 @@ function SubtitleDisplayComponent({ timestamps, currentTimeRef, language, classN
   const prevSubtitleRef = useRef<SubtitleTimestamp | null>(null);
 
   useEffect(() => {
-    console.log('🎬 SubtitleDisplay mounted:', timestamps.length, 'timestamps');
-    
     const updateSubtitle = () => {
       const currentTime = currentTimeRef.current || 0;
       const subtitle = timestamps.find(
@@ -25,7 +23,6 @@ function SubtitleDisplayComponent({ timestamps, currentTimeRef, language, classN
       
       // Only update state if subtitle actually changed
       if (subtitle !== prevSubtitleRef.current) {
-        console.log('📺 Subtitle changed at', currentTime, ':', subtitle?.text || 'none');
         prevSubtitleRef.current = subtitle || null;
         setCurrentSubtitle(subtitle || null);
       }

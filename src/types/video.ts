@@ -23,6 +23,10 @@ export interface Video {
   username: string;
   fullName: string;
   avatarUrl: string;
+  // Audio dubbing fields
+  audio_vi?: string;
+  audio_vi_url?: string;
+  has_dubbing?: boolean;
 }
 
 export interface VideoUploadRequest {
@@ -31,6 +35,8 @@ export interface VideoUploadRequest {
   url?: string;
   file?: File;
   visibility?: 'public' | 'hidden';
+  enableDubbing?: boolean;
+  speakerId?: 'id_1' | 'id_2' | 'id_3' | 'id_4';
 }
 
 export interface VideoUpdateRequest {

@@ -129,6 +129,8 @@ export const videosApi = {
       if (data.file) formData.append('file', data.file);
       if (data.url) formData.append('url', data.url);
       if (data.visibility) formData.append('visibility', data.visibility);
+      if (data.enableDubbing !== undefined) formData.append('enable_dubbing', data.enableDubbing.toString());
+      if (data.speakerId) formData.append('speaker_id', data.speakerId);
 
       const response = await axiosClient.post<Video>('/videos/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },

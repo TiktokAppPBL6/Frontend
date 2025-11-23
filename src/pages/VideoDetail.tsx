@@ -19,6 +19,7 @@ export function VideoDetail() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const currentTimeRef = useRef<number>(0);
   
   const [comment, setComment] = useState('');
@@ -29,6 +30,7 @@ export function VideoDetail() {
   const [progress, setProgress] = useState(0);
   const [avatarError, setAvatarError] = useState(false);
   const [subtitleLanguage, setSubtitleLanguage] = useState<'off' | 'en' | 'vi'>('off');
+  const [isDubbing, setIsDubbing] = useState(false);
 
   const { data: video, isLoading: videoLoading } = useQuery({
     queryKey: ['video', videoId],
@@ -65,41 +67,56 @@ export function VideoDetail() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Debug: Log transcript data
-  useEffect(() => {
-    if (transcriptData && subtitleLanguage !== 'off') {
-      console.log('📝 Transcript loaded:', {
-        timestamps: transcriptData.timestamps?.length,
-        firstTimestamp: transcriptData.timestamps?.[0],
-        language: subtitleLanguage
-      });
-    }
-  }, [transcriptData, subtitleLanguage]);
-
   // Normalize comments data - API returns { comments: [], total: number }
   const commentsList = commentsData?.comments || [];
 
   // Update progress bar
   useEffect(() => {
     const video = videoRef.current;
+    const audio = audioRef.current;
     if (!video) return;
 
     const updateProgress = () => {
       const progress = (video.currentTime / video.duration) * 100;
       setProgress(progress || 0);
       currentTimeRef.current = video.currentTime;
-      if (subtitleLanguage !== 'off') {
-        console.log('⏱️ VideoDetail - Current time:', video.currentTime, 'Ref:', currentTimeRef.current);
+    };
+
+    const handleSeeked = () => {
+      // Sync audio when video is seeked
+      if (isDubbing && audio) {
+        audio.currentTime = video.currentTime;
+      }
+    };
+
+    const handlePlay = () => {
+      // Sync audio when video plays
+      if (isDubbing && audio) {
+        audio.currentTime = video.currentTime;
+        audio.play().catch(e => console.log('Audio play failed:', e));
+      }
+    };
+
+    const handlePause = () => {
+      // Pause audio when video pauses
+      if (isDubbing && audio) {
+        audio.pause();
       }
     };
 
     video.addEventListener('timeupdate', updateProgress);
     video.addEventListener('loadedmetadata', updateProgress);
+    video.addEventListener('seeked', handleSeeked);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
     return () => {
       video.removeEventListener('timeupdate', updateProgress);
       video.removeEventListener('loadedmetadata', updateProgress);
+      video.removeEventListener('seeked', handleSeeked);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
     };
-  }, []);
+  }, [isDubbing]);
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const video = videoRef.current;
@@ -109,12 +126,44 @@ export function VideoDetail() {
     const clickX = e.clientX - rect.left;
     const percentage = clickX / rect.width;
     video.currentTime = percentage * video.duration;
+    
+    // Sync audio if dubbing
+    if (isDubbing && audioRef.current) {
+      audioRef.current.currentTime = video.currentTime;
+    }
   };
 
   const toggleMute = () => {
     if (videoRef.current) {
       videoRef.current.muted = !videoRef.current.muted;
       setIsMuted(videoRef.current.muted);
+    }
+    if (audioRef.current && isDubbing) {
+      audioRef.current.muted = !audioRef.current.muted;
+    }
+  };
+
+  const toggleDubbing = () => {
+    const newIsDubbing = !isDubbing;
+    setIsDubbing(newIsDubbing);
+    
+    const videoEl = videoRef.current;
+    const audioEl = audioRef.current;
+    
+    if (!videoEl || !audioEl) return;
+    
+    if (newIsDubbing) {
+      // Switch to dubbing: mute video, play audio
+      videoEl.muted = true;
+      audioEl.currentTime = videoEl.currentTime;
+      audioEl.muted = isMuted;
+      if (!videoEl.paused) {
+        audioEl.play().catch(e => console.log('Audio play failed:', e));
+      }
+    } else {
+      // Switch to original: unmute video, pause audio
+      videoEl.muted = isMuted;
+      audioEl.pause();
     }
   };
 
@@ -123,9 +172,15 @@ export function VideoDetail() {
       if (videoRef.current.paused) {
         videoRef.current.play();
         setIsPlaying(true);
+        if (isDubbing && audioRef.current) {
+          audioRef.current.play().catch(e => console.log('Audio play failed:', e));
+        }
       } else {
         videoRef.current.pause();
         setIsPlaying(false);
+        if (isDubbing && audioRef.current) {
+          audioRef.current.pause();
+        }
       }
     }
   };
@@ -249,10 +304,20 @@ export function VideoDetail() {
               className="max-w-full max-h-[calc(100vh-40px)] object-contain cursor-pointer rounded-3xl shadow-2xl"
               loop
               playsInline
-              muted={isMuted}
+              muted={isDubbing ? true : isMuted}
               onClick={handleVideoClick}
               autoPlay
             />
+
+            {/* Audio dubbing track - hidden, synced with video */}
+            {video.audio_vi && (
+              <audio
+                ref={audioRef}
+                src={getMediaUrl(video.audio_vi)}
+                loop
+                style={{ display: 'none' }}
+              />
+            )}
 
             {/* Subtitles - Smart positioning to avoid UI overlap */}
             {subtitleLanguage !== 'off' && transcriptData?.timestamps && (
@@ -348,6 +413,8 @@ export function VideoDetail() {
               onMuteToggle={toggleMute}
               subtitleLanguage={subtitleLanguage}
               onSubtitleChange={setSubtitleLanguage}
+              isDubbing={isDubbing}
+              onDubbingToggle={toggleDubbing}
             />
           </div>
         </div>
