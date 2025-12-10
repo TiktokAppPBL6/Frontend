@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { FormInput } from '@/components/common/FormInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { videosApi } from '@/api/videos.api';
 import { Upload as UploadIcon, Video, Languages, Volume2 } from 'lucide-react';

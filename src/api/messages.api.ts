@@ -47,4 +47,16 @@ export const messagesApi = {
       throw error;
     }
   },
+
+  // Get suggested users (users who haven't been messaged yet)
+  getSuggestedUsers: async (limit: number = 10): Promise<any[]> => {
+    try {
+      const response = await axiosClient.get(`/messages/suggested-users`, {
+        params: { limit }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };

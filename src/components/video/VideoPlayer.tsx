@@ -6,11 +6,9 @@ import { VideoTranscript } from '@/types';
 
 interface VideoPlayerProps {
   videoUrl: string;
-  videoId?: number;
   transcript?: VideoTranscript | null;
   selectedLanguage?: 'en' | 'vi' | 'off';
   isMuted?: boolean;
-  onMutedChange?: (muted: boolean) => void;
   autoPlay?: boolean;
   loop?: boolean;
   showControls?: boolean;
@@ -20,11 +18,9 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({
   videoUrl,
-  videoId,
   transcript,
   selectedLanguage = 'off',
   isMuted = false,
-  onMutedChange,
   autoPlay = false,
   loop = true,
   showControls = true,
@@ -100,14 +96,6 @@ export function VideoPlayer({
     const clickX = e.clientX - rect.left;
     const percentage = clickX / rect.width;
     video.currentTime = percentage * video.duration;
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      const newMutedState = !videoRef.current.muted;
-      videoRef.current.muted = newMutedState;
-      onMutedChange?.(newMutedState);
-    }
   };
 
   return (

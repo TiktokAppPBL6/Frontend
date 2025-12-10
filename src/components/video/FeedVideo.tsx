@@ -4,7 +4,7 @@ import { Video } from '@/types';
 import { VideoActions } from './VideoActions';
 import { SubtitleDisplay } from './SubtitleDisplay';
 import { useAuthStore } from '@/app/store/auth';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { getMediaUrl, getAvatarUrl } from '@/lib/utils';
 import { CommentsModal } from '@/components/comments/CommentsModal';
 import { socialApi } from '@/api/social.api';
@@ -17,7 +17,7 @@ interface FeedVideoProps {
   onVideoInView?: (videoId: number, inView: boolean) => void;
 }
 
-function FeedVideoComponent({ video, isInView = false, onVideoInView }: FeedVideoProps) {
+function FeedVideoComponent({ video, onVideoInView }: FeedVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -25,7 +25,6 @@ function FeedVideoComponent({ video, isInView = false, onVideoInView }: FeedVide
   const hasPlayedOnce = useRef<boolean>(false); // Track if video has been played once
   const navigate = useNavigate();
   const [isMuted, setIsMuted] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
@@ -38,14 +37,12 @@ function FeedVideoComponent({ video, isInView = false, onVideoInView }: FeedVide
   const v: any = video;
   const ownerId = v.ownerId ?? v.owner_id ?? (v.owner as any)?.id ?? null;
   const ownerUsername: string = v.username ?? v.user_name ?? (v.owner as any)?.username ?? '';
-  const ownerFullName: string = v.fullName ?? v.full_name ?? (v.owner as any)?.fullName ?? '';
   const ownerAvatar: string = getAvatarUrl(v.avatarUrl ?? v.avatar_url ?? (v.owner as any)?.avatarUrl);
   const isOwnVideo = currentUser?.id === ownerId;
   
   // Follow state from video data
   const initialFollow = v.is_following ?? v.isFollowing ?? (v.owner as any)?.is_following ?? false;
   const [isFollowing, setIsFollowing] = useState<boolean>(!!initialFollow);
-  const queryClient = useQueryClient();
 
   // Fetch video transcript/subtitles
   const { data: transcriptData } = useQuery({
@@ -92,7 +89,6 @@ function FeedVideoComponent({ video, isInView = false, onVideoInView }: FeedVide
                 hasPlayedOnce.current = true;
               }
               videoRef.current.play().catch((e) => console.log('Play failed:', e));
-              setIsPlaying(true);
               
               // Sync audio if dubbing is enabled
               if (isDubbing && audioRef.current) {
@@ -101,7 +97,6 @@ function FeedVideoComponent({ video, isInView = false, onVideoInView }: FeedVide
               }
             } else {
               videoRef.current.pause();
-              setIsPlaying(false);
               
               // Pause audio if dubbing
               if (isDubbing && audioRef.current) {
@@ -231,13 +226,11 @@ function FeedVideoComponent({ video, isInView = false, onVideoInView }: FeedVide
     if (videoRef.current) {
       if (videoRef.current.paused) {
         videoRef.current.play();
-        setIsPlaying(true);
         if (isDubbing && audioRef.current) {
           audioRef.current.play().catch(e => console.log('Audio play failed:', e));
         }
       } else {
         videoRef.current.pause();
-        setIsPlaying(false);
         if (isDubbing && audioRef.current) {
           audioRef.current.pause();
         }

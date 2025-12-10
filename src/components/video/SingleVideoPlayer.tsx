@@ -40,11 +40,9 @@ export function SingleVideoPlayer({
         <div className="relative max-w-[800px] h-full">
           <VideoPlayer
             videoUrl={video.hlsUrl || video.url}
-            videoId={video.id}
             transcript={transcript}
             selectedLanguage={subtitleLanguage}
             isMuted={isMuted}
-            onMutedChange={setIsMuted}
             autoPlay={true}
             loop={true}
             showControls={true}

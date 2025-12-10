@@ -5,8 +5,9 @@ export interface Message {
   senderId: ID;
   receiverId: ID;
   content: string;
+  mediaUrl?: string;
   createdAt: string;
-  seen: boolean;
+  seen?: boolean;
   sender?: User;
   receiver?: User;
 }
@@ -22,11 +23,6 @@ export interface MessageSendRequest {
   content: string;
 }
 
-export interface MessagesResponse {
-  messages: Message[];
-  total: number;
-}
+export interface MessagesResponse extends Array<Message> {}
 
-export interface InboxResponse {
-  conversations: Conversation[];
-}
+export interface InboxResponse extends Array<Message> {}

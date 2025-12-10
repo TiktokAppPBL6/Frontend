@@ -26,7 +26,6 @@ export function VideoDetail() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [avatarError, setAvatarError] = useState(false);
   const [subtitleLanguage, setSubtitleLanguage] = useState<'off' | 'en' | 'vi'>('off');
@@ -173,13 +172,11 @@ export function VideoDetail() {
     if (videoRef.current) {
       if (videoRef.current.paused) {
         videoRef.current.play();
-        setIsPlaying(true);
         if (isDubbing && audioRef.current) {
           audioRef.current.play().catch(e => console.log('Audio play failed:', e));
         }
       } else {
         videoRef.current.pause();
-        setIsPlaying(false);
         if (isDubbing && audioRef.current) {
           audioRef.current.pause();
         }

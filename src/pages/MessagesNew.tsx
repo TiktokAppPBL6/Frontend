@@ -28,13 +28,6 @@ export function Messages() {
   const { data: inbox, isLoading: inboxLoading } = useQuery({
     queryKey: ['messages', 'inbox'],
     queryFn: messagesApi.getInbox,
-    refetchInterval: 3000, // Auto-refresh every 3 seconds
-  });
-
-  // Get suggested users (people who haven't been messaged yet)
-  const { data: suggestedUsers } = useQuery({
-    queryKey: ['messages', 'suggested'],
-    queryFn: () => messagesApi.getSuggestedUsers(10),
   });
 
   // Get conversation
@@ -42,7 +35,6 @@ export function Messages() {
     queryKey: ['messages', 'conversation', selectedUserId],
     queryFn: () => messagesApi.getConversation(selectedUserId!),
     enabled: !!selectedUserId,
-    refetchInterval: selectedUserId ? 2000 : false, // Auto-refresh every 2 seconds when chat is open
   });
 
   // Get selected user info
@@ -69,12 +61,9 @@ export function Messages() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Only scroll when conversation data changes AND has messages
   useEffect(() => {
-    if (conversation && conversation.length > 0) {
-      scrollToBottom();
-    }
-  }, [conversation?.length]); // Changed dependency to only trigger when message count changes
+    scrollToBottom();
+  }, [conversation]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,25 +96,13 @@ export function Messages() {
 
   const conversations = getConversations();
 
-  // Filter conversations based on search query
-  const filteredConversations = conversations.filter((msg) => {
-    if (!searchQuery) return true;
-    const partnerInfo = msg.senderId === currentUser?.id ? msg.receiver : msg.sender;
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      partnerInfo?.fullName?.toLowerCase().includes(searchLower) ||
-      partnerInfo?.username?.toLowerCase().includes(searchLower) ||
-      msg.content?.toLowerCase().includes(searchLower)
-    );
-  });
-
   return (
-    <div className="h-screen bg-[#121212] flex flex-col overflow-hidden">
-      <div className="flex-1 flex overflow-hidden">
+    <div className="min-h-screen bg-[#121212]">
+      <div className="container mx-auto max-w-7xl h-screen flex">
         {/* Sidebar - Conversations List */}
-        <div className={`w-full ${selectedUserId ? 'hidden md:block' : ''} md:w-96 bg-[#1e1e1e] border-r border-gray-800 flex flex-col overflow-hidden`}>
-          {/* Header - Fixed */}
-          <div className="flex-shrink-0 p-4 border-b border-gray-800">
+        <div className={`w-full ${selectedUserId ? 'hidden md:block' : ''} md:w-96 bg-[#1e1e1e] border-r border-gray-800 flex flex-col`}>
+          {/* Header */}
+          <div className="p-4 border-b border-gray-800">
             <h1 className="text-2xl font-bold text-white mb-4">Tin nhắn</h1>
             
             {/* Search */}
@@ -147,16 +124,14 @@ export function Messages() {
               <div className="flex items-center justify-center h-32">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FE2C55]"></div>
               </div>
-            ) : filteredConversations.length === 0 ? (
+            ) : conversations.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-gray-400 p-8">
                 <Send className="w-16 h-16 mb-4" />
-                <p className="text-center">{searchQuery ? 'Không tìm thấy kết quả' : 'Chưa có tin nhắn nào'}</p>
-                <p className="text-sm text-center mt-2 text-gray-500">
-                  {searchQuery ? 'Thử tìm kiếm với từ khóa khác' : 'Bắt đầu trò chuyện với bạn bè'}
-                </p>
+                <p className="text-center">Chưa có tin nhắn nào</p>
+                <p className="text-sm text-center mt-2 text-gray-500">Bắt đầu trò chuyện với bạn bè</p>
               </div>
             ) : (
-              filteredConversations.map((msg) => {
+              conversations.map((msg) => {
                 const partnerId = msg.senderId === currentUser?.id ? msg.receiverId : msg.senderId;
                 const partnerInfo = msg.senderId === currentUser?.id ? msg.receiver : msg.sender;
                 const isSelected = selectedUserId === partnerId;
@@ -177,13 +152,10 @@ export function Messages() {
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm truncate text-white">
-                            {partnerInfo?.fullName}
-                          </h3>
-                          <p className="text-xs text-gray-500 truncate">@{partnerInfo?.username}</p>
-                        </div>
-                        <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                        <h3 className="font-semibold text-sm truncate text-white">
+                          {partnerInfo?.fullName || partnerInfo?.username}
+                        </h3>
+                        <span className="text-xs text-gray-500">
                           {formatDistanceToNow(new Date(msg.createdAt), { 
                             addSuffix: true,
                             locale: vi 
@@ -199,42 +171,15 @@ export function Messages() {
                 );
               })
             )}
-            
-            {/* Suggested Users - "Thử gửi lời chào" */}
-            {!inboxLoading && suggestedUsers && suggestedUsers.length > 0 && (
-              <div className="border-t border-gray-800 pt-4">
-                <h3 className="px-4 pb-3 text-sm font-semibold text-gray-400">Thử gửi lời chào</h3>
-                {suggestedUsers.map((user: any) => (
-                  <div
-                    key={user.id}
-                    onClick={() => setSelectedUserId(user.id)}
-                    className="flex items-center gap-3 p-4 hover:bg-[#2a2a2a] cursor-pointer border-b border-gray-800 transition-colors"
-                  >
-                    <Avatar
-                      src={user.avatarUrl}
-                      alt={user.username}
-                      size="md"
-                    />
-                    
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm text-white">
-                        {user.fullName}
-                      </h3>
-                      <p className="text-xs text-gray-500">@{user.username}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 
         {/* Chat Area */}
-        <div className={`flex-1 ${!selectedUserId && 'hidden md:flex'} flex flex-col bg-[#121212]`}>
+        <div className={`flex-1 ${!selectedUserId && 'hidden md:flex'} flex-col bg-[#121212]`}>
           {selectedUserId ? (
             <>
-              {/* Chat Header - Fixed */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-[#1e1e1e] flex-shrink-0">
+              {/* Chat Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-[#1e1e1e]">
                 <div className="flex items-center gap-3">
                   <Button
                     variant="ghost"
@@ -251,8 +196,8 @@ export function Messages() {
                     size="md"
                   />
                   
-                  <div className="flex-1 min-w-0">
-                    <h2 className="font-semibold text-white truncate">{selectedUser?.fullName}</h2>
+                  <div>
+                    <h2 className="font-semibold text-white">{selectedUser?.fullName || selectedUser?.username}</h2>
                     <p className="text-sm text-gray-500">@{selectedUser?.username}</p>
                   </div>
                 </div>
@@ -262,14 +207,14 @@ export function Messages() {
                 </Button>
               </div>
 
-              {/* Messages - Scrollable area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col">
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {conversationLoading ? (
-                  <div className="flex items-center justify-center flex-1">
+                  <div className="flex items-center justify-center h-full">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FE2C55]"></div>
                   </div>
                 ) : !conversation || conversation.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center flex-1 text-gray-400">
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
                     <Send className="w-16 h-16 mb-4" />
                     <p>Chưa có tin nhắn</p>
                     <p className="text-sm mt-2 text-gray-500">Gửi tin nhắn đầu tiên</p>
@@ -330,8 +275,8 @@ export function Messages() {
                 )}
               </div>
 
-              {/* Message Input - Fixed at bottom */}
-              <form onSubmit={handleSendMessage} className="flex-shrink-0 p-4 border-t border-gray-800 bg-[#1e1e1e]">
+              {/* Message Input */}
+              <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800 bg-[#1e1e1e]">
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
