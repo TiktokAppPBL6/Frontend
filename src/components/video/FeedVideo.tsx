@@ -210,10 +210,12 @@ function FeedVideoComponent({ video, isInView = false, onVideoInView }: FeedVide
     
     if (!videoEl || !audioEl) return;
     
+    // Always sync audio to current video time
+    audioEl.currentTime = videoEl.currentTime;
+    
     if (newIsDubbing) {
       // Switch to dubbing: mute video, play audio
       videoEl.muted = true;
-      audioEl.currentTime = videoEl.currentTime;
       audioEl.muted = isMuted;
       if (!videoEl.paused) {
         audioEl.play().catch(e => console.log('Audio play failed:', e));
