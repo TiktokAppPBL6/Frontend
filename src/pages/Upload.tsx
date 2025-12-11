@@ -12,7 +12,7 @@ export function Upload() {
     title: '',
     description: '',
     visibility: 'public' as 'public' | 'hidden',
-    enableDubbing: false,
+    enableDubbing: true,
     speakerId: 'id_1' as 'id_1' | 'id_2' | 'id_3' | 'id_4',
   });
   const [file, setFile] = useState<File | null>(null);
@@ -22,9 +22,27 @@ export function Upload() {
 
   const uploadMutation = useMutation({
     mutationFn: videosApi.uploadVideo,
-    onSuccess: (video) => {
-      toast.success('Video đã được tải lên thành công!');
-      navigate(`/video/${video.id}`);
+    onSuccess: () => {
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        visibility: 'public',
+        enableDubbing: true,
+        speakerId: 'id_1',
+      });
+      setFile(null);
+      setPreview(null);
+      setErrors({});
+      
+      // Show notification
+      toast.success('Video đang được xử lý, sẽ có thông báo sau', {
+        duration: 4000,
+        icon: '⏳',
+      });
+      
+      // Navigate to home feed
+      navigate('/home', { replace: true });
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || 'Tải video thất bại');
@@ -97,6 +115,16 @@ export function Upload() {
       return;
     }
 
+    // Show uploading message
+    toast.success('Video đang được tải lên và xử lý, sẽ có thông báo sau', {
+      duration: 4000,
+      icon: '⏳',
+    });
+
+    // Redirect to home immediately
+    navigate('/home', { replace: true });
+
+    // Upload in background
     uploadMutation.mutate({
       title: formData.title,
       description: formData.description || undefined,
@@ -266,24 +294,10 @@ export function Upload() {
                     <h3 className="text-base font-semibold text-white">Lồng tiếng tự động</h3>
                     <p className="text-xs text-gray-400">Chuyển đổi giọng nói trong video sang tiếng Việt</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, enableDubbing: !formData.enableDubbing })}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      formData.enableDubbing ? 'bg-[#FE2C55]' : 'bg-gray-700'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        formData.enableDubbing ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
                 </div>
 
                 {/* Voice Selection */}
-                {formData.enableDubbing && (
-                  <div className="space-y-3 pt-2 animate-in slide-in-from-top-2 duration-300">
+                <div className="space-y-3 pt-2">
                     <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                       <Volume2 className="h-4 w-4" />
                       Chọn giọng đọc
@@ -331,7 +345,6 @@ export function Upload() {
                       </p>
                     </div>
                   </div>
-                )}
               </div>
 
               {/* Submit */}

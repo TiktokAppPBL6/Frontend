@@ -195,7 +195,7 @@ export function Profile() {
                 </button>
                 <div>
                   <span className="font-bold text-xl text-white">{formatNumber(videosCount)}</span>
-                  <span className="text-gray-400 text-sm ml-2">Thích</span>
+                  <span className="text-gray-400 text-sm ml-2">Video</span>
                 </div>
               </div>
 

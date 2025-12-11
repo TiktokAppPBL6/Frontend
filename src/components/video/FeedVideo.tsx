@@ -135,10 +135,21 @@ function FeedVideoComponent({ video, onVideoInView }: FeedVideoProps) {
       currentTimeRef.current = video.currentTime; // Update ref, no re-render
     };
 
+    const handleSeeking = () => {
+      // Pause audio when video starts seeking
+      if (isDubbing && audio) {
+        audio.pause();
+      }
+    };
+
     const handleSeeked = () => {
-      // Sync audio when video is seeked
+      // Sync audio when video seek completes
       if (isDubbing && audio) {
         audio.currentTime = video.currentTime;
+        // Resume playing if video is playing
+        if (!video.paused) {
+          audio.play().catch(e => console.log('Audio play failed:', e));
+        }
       }
     };
 
@@ -159,12 +170,14 @@ function FeedVideoComponent({ video, onVideoInView }: FeedVideoProps) {
 
     video.addEventListener('timeupdate', updateProgress);
     video.addEventListener('loadedmetadata', updateProgress);
+    video.addEventListener('seeking', handleSeeking);
     video.addEventListener('seeked', handleSeeked);
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePause);
     return () => {
       video.removeEventListener('timeupdate', updateProgress);
       video.removeEventListener('loadedmetadata', updateProgress);
+      video.removeEventListener('seeking', handleSeeking);
       video.removeEventListener('seeked', handleSeeked);
       video.removeEventListener('play', handlePlay);
       video.removeEventListener('pause', handlePause);
@@ -173,17 +186,22 @@ function FeedVideoComponent({ video, onVideoInView }: FeedVideoProps) {
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const video = videoRef.current;
+    const audio = audioRef.current;
     if (!video) return;
     
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
-    const percentage = clickX / rect.width;
-    video.currentTime = percentage * video.duration;
+    const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+    const newTime = percentage * video.duration;
     
-    // Sync audio if dubbing
-    if (isDubbing && audioRef.current) {
-      audioRef.current.currentTime = video.currentTime;
+    // Pause audio before seeking
+    if (isDubbing && audio) {
+      audio.pause();
     }
+    
+    video.currentTime = newTime;
+    
+    // Sync audio after seek (will be handled by seeked event)
   };
 
   const toggleMute = () => {
@@ -281,15 +299,17 @@ function FeedVideoComponent({ video, onVideoInView }: FeedVideoProps) {
 
           {/* Progress Bar - Minimal, elegant */}
           <div 
-            className="absolute bottom-2 left-2 right-2 h-0.5 bg-white/15 rounded-full cursor-pointer group/progress hover:h-1 transition-all z-10 opacity-0 group-hover:opacity-100"
+            className="absolute bottom-0 left-0 right-0 h-8 cursor-pointer group/progress z-10 flex items-end pb-2 px-2"
             onClick={handleProgressClick}
             style={{ pointerEvents: 'auto' }}
           >
-            <div 
-              className="h-full bg-gradient-to-r from-[#FE2C55] to-[#FF6B9D] rounded-full transition-all duration-100 relative"
-              style={{ width: `${progress}%` }}
-            >
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover/progress:opacity-100 transition-opacity" />
+            <div className="w-full h-1 bg-white/20 rounded-full hover:h-1.5 transition-all">
+              <div 
+                className="h-full bg-gradient-to-r from-[#FE2C55] to-[#FF6B9D] rounded-full transition-all duration-100 relative"
+                style={{ width: `${progress}%` }}
+              >
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover/progress:opacity-100 transition-opacity scale-0 group-hover/progress:scale-100" />
+              </div>
             </div>
           </div>
 
