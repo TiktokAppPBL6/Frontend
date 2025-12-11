@@ -63,11 +63,25 @@ export const authApi = {
   },
   
   // Verify current password without changing session
-  verifyPassword: async (password: string): Promise<{ valid: boolean }> => {
+  verifyPassword: async (password: string, email?: string): Promise<{ valid: boolean }> => {
     try {
+      // Get email from localStorage user if not provided
+      let userEmail = email;
+      if (!userEmail) {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          userEmail = user.email;
+        }
+      }
+      
+      if (!userEmail) {
+        throw new Error('Email is required for password verification');
+      }
+      
       const response = await axiosClient.post<{ valid?: boolean; success?: boolean }>(
         '/auth/verify-password',
-        { password },
+        { email: userEmail, password },
         {
           headers: { 'X-Skip-Auth-Redirect': '1' },
         }
@@ -76,7 +90,7 @@ export const authApi = {
       return { valid };
     } catch (error: any) {
       const status = error?.response?.status;
-      if (status === 401) {
+      if (status === 401 || status === 400) {
         return { valid: false };
       }
       throw error;
