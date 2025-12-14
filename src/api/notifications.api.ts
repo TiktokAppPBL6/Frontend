@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
-import type { Notification, NotificationsResponse, ID } from '@/types';
+import type { NotificationsResponse, ID } from '@/types';
 export const notificationsApi = {
   // Get notifications
   getNotifications: async (): Promise<NotificationsResponse> => {

@@ -7,7 +7,6 @@ import {
   Bell,
   User,
   Bookmark,
-  Settings,
   Search,
   LogOut,
 } from 'lucide-react';

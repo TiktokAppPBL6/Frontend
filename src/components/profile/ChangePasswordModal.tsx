@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { authApi } from '@/api/auth.api';
 import { Button } from '@/components/ui/button';
-import { X, Lock, Eye, EyeOff } from 'lucide-react';
+import { PasswordInput } from './PasswordInput';
+import { X, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface ChangePasswordModalProps {
@@ -15,11 +16,6 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
-  });
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -102,97 +98,33 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Current Password */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">
-              Mật khẩu hiện tại
-            </label>
-            <div className="relative">
-              <input
-                type={showPasswords.current ? 'text' : 'password'}
-                value={formData.currentPassword}
-                onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                className={`w-full px-4 py-3 pr-12 bg-[#1E1E1E] border-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FE2C55]/20 transition-all placeholder:text-gray-500 ${
-                  errors.currentPassword ? 'border-red-500' : 'border-gray-800 focus:border-[#FE2C55]'
-                }`}
-                placeholder="Nhập mật khẩu hiện tại"
-                disabled={changePasswordMutation.isPending}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
-              >
-                {showPasswords.current ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
-            </div>
-            {errors.currentPassword && (
-              <p className="text-sm text-red-400 mt-1">{errors.currentPassword}</p>
-            )}
-          </div>
+          <PasswordInput
+            label="Mật khẩu hiện tại"
+            value={formData.currentPassword}
+            onChange={(value) => setFormData({ ...formData, currentPassword: value })}
+            placeholder="Nhập mật khẩu hiện tại"
+            error={errors.currentPassword}
+            disabled={changePasswordMutation.isPending}
+          />
 
-          {/* New Password */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">
-              Mật khẩu mới
-            </label>
-            <div className="relative">
-              <input
-                type={showPasswords.new ? 'text' : 'password'}
-                value={formData.newPassword}
-                onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                className={`w-full px-4 py-3 pr-12 bg-[#1E1E1E] border-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FE2C55]/20 transition-all placeholder:text-gray-500 ${
-                  errors.newPassword ? 'border-red-500' : 'border-gray-800 focus:border-[#FE2C55]'
-                }`}
-                placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
-                disabled={changePasswordMutation.isPending}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
-              >
-                {showPasswords.new ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
-            </div>
-            {errors.newPassword && (
-              <p className="text-sm text-red-400 mt-1">{errors.newPassword}</p>
-            )}
-            {formData.newPassword && formData.newPassword.length < 6 && (
-              <p className="text-xs text-gray-400 mt-1">
-                {formData.newPassword.length}/6 ký tự
-              </p>
-            )}
-          </div>
+          <PasswordInput
+            label="Mật khẩu mới"
+            value={formData.newPassword}
+            onChange={(value) => setFormData({ ...formData, newPassword: value })}
+            placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
+            error={errors.newPassword}
+            disabled={changePasswordMutation.isPending}
+            showCharCount
+          />
 
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">
-              Xác nhận mật khẩu mới
-            </label>
-            <div className="relative">
-              <input
-                type={showPasswords.confirm ? 'text' : 'password'}
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className={`w-full px-4 py-3 pr-12 bg-[#1E1E1E] border-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FE2C55]/20 transition-all placeholder:text-gray-500 ${
-                  errors.confirmPassword ? 'border-red-500' : 'border-gray-800 focus:border-[#FE2C55]'
-                }`}
-                placeholder="Nhập lại mật khẩu mới"
-                disabled={changePasswordMutation.isPending}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
-              >
-                {showPasswords.confirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
-            </div>
-            {errors.confirmPassword && (
-              <p className="text-sm text-red-400 mt-1">{errors.confirmPassword}</p>
-            )}
-          </div>
+          <PasswordInput
+            label="Xác nhận mật khẩu mới"
+            value={formData.confirmPassword}
+            onChange={(value) => setFormData({ ...formData, confirmPassword: value })}
+            placeholder="Nhập lại mật khẩu mới"
+            error={errors.confirmPassword}
+            disabled={changePasswordMutation.isPending}
+          />
 
           {/* Info Box */}
           <div className="bg-blue-950/30 border border-blue-900/50 rounded-lg p-4">

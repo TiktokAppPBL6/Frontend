@@ -1,0 +1,73 @@
+import { Avatar } from '@/components/common/Avatar';
+import { Send } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { vi } from 'date-fns/locale';
+import type { Message } from '@/types';
+
+interface ConversationsListProps {
+  conversations: Message[];
+  currentUserId?: number;
+  selectedUserId: number | null;
+  onSelectUser: (userId: number) => void;
+}
+
+export function ConversationsList({ 
+  conversations, 
+  currentUserId, 
+  selectedUserId, 
+  onSelectUser 
+}: ConversationsListProps) {
+  if (conversations.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-gray-400 p-8">
+        <Send className="w-16 h-16 mb-4" />
+        <p className="text-center">Chưa có tin nhắn nào</p>
+        <p className="text-sm text-center mt-2 text-gray-500">Bắt đầu trò chuyện với bạn bè</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {conversations.map((msg) => {
+        const partnerId = msg.senderId === currentUserId ? msg.receiverId : msg.senderId;
+        const partnerInfo = msg.senderId === currentUserId ? msg.receiver : msg.sender;
+        const isSelected = selectedUserId === partnerId;
+        
+        return (
+          <div
+            key={msg.id}
+            onClick={() => onSelectUser(partnerId)}
+            className={`flex items-center gap-3 p-4 hover:bg-[#2a2a2a] cursor-pointer border-b border-gray-800 transition-colors ${
+              isSelected ? 'bg-[#2a2a2a]' : ''
+            }`}
+          >
+            <Avatar
+              src={partnerInfo?.avatarUrl}
+              alt={partnerInfo?.username}
+              size="md"
+            />
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-semibold text-sm truncate text-white">
+                  {partnerInfo?.fullName || partnerInfo?.username}
+                </h3>
+                <span className="text-xs text-gray-500">
+                  {formatDistanceToNow(new Date(msg.createdAt), {
+                    addSuffix: true,
+                    locale: vi,
+                  })}
+                </span>
+              </div>
+              <p className="text-sm text-gray-400 truncate">
+                {msg.senderId === currentUserId && 'Bạn: '}
+                {msg.content || '📷 Hình ảnh'}
+              </p>
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}

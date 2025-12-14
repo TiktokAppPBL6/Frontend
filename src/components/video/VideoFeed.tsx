@@ -1,5 +1,5 @@
 import { useState, useCallback, memo } from 'react';
-import { FeedVideo } from './FeedVideo';
+import { UniversalVideoPlayer } from './UniversalVideoPlayer';
 import { VideoSkeleton } from '@/components/ui/skeleton';
 import { Video } from '@/types';
 
@@ -34,8 +34,9 @@ function VideoFeedComponent({ videos, isLoading, emptyState }: VideoFeedProps) {
     <div className="w-full">
       {videos.map((video) => (
         <div key={video.id} className="h-screen snap-start snap-always">
-          <FeedVideo
+          <UniversalVideoPlayer
             video={video}
+            mode="feed"
             isInView={currentVideoId === video.id}
             onVideoInView={handleVideoInView}
           />

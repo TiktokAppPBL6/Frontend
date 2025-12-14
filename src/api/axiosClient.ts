@@ -1,7 +1,8 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import toast from 'react-hot-toast';
+import { API_FULL_URL } from '@/config/api';
 
-const BASE_URL = 'http://localhost:8000/api/v1';
+const BASE_URL = API_FULL_URL;
 
 export const axiosClient = axios.create({
   baseURL: BASE_URL,

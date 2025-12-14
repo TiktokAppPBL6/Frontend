@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { cn, getAvatarUrl } from '@/lib/utils';
-import { User } from 'lucide-react';
 
 interface AvatarProps {
   src?: string;

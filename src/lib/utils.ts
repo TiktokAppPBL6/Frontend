@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { API_BASE_URL } from '@/config/api';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -55,7 +56,7 @@ export function getMediaUrl(url: string | undefined | null, defaultAvatar: boole
   }
   
   // Otherwise, prepend backend base URL (HTTP server, not file path!)
-  const baseUrl = 'http://localhost:8000';
+  const baseUrl = API_BASE_URL;
   // Remove leading slash if exists to avoid double slashes
   const cleanUrl = url.startsWith('/') ? url : `/${url}`;
   return `${baseUrl}${cleanUrl}`;
@@ -84,7 +85,7 @@ export function getAvatarUrl(url: string | undefined | null): string {
   }
   
   // Otherwise, prepend backend base URL
-  const baseUrl = 'http://localhost:8000';
+  const baseUrl = API_BASE_URL;
   const cleanUrl = url.startsWith('/') ? url : `/${url}`;
   return `${baseUrl}${cleanUrl}`;
 }

@@ -1,0 +1,15 @@
+{
+  "name": "tiktok-clone",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host --port 3000",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "deploy:vercel": "vercel --prod",
+    "deploy:netlify": "netlify deploy --prod",
+    "deploy:prepare": "npm run build && echo Build completed! Ready to deploy.",
+    "check:build": "tsc --noEmit && echo TypeScript check passed!"
+  }
+}

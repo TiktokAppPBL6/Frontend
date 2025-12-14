@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PrivacySettingsSection } from '@/components/settings/PrivacySettingsSection';
+import { NotificationSettingsSection } from '@/components/settings/NotificationSettingsSection';
 import toast from 'react-hot-toast';
 
 type SectionKey = 'account' | 'privacy' | 'notifications' | 'language' | 'security';
@@ -83,51 +85,29 @@ export function Settings() {
             )}
 
             {active === 'privacy' && (
-              <Card className="bg-[#1e1e1e] border-gray-800">
-                <CardHeader>
-                  <CardTitle className="text-white">Quyền riêng tư</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <label className="flex items-center justify-between text-gray-300">
-                    <span>Tài khoản riêng tư</span>
-                    <input type="checkbox" checked={settings.privacy.privateAccount} onChange={(e)=>setSettings(s=>({
-                      ...s, privacy:{...s.privacy, privateAccount:e.target.checked}
-                    }))} className="w-4 h-4" />
-                  </label>
-                  <label className="flex items-center justify-between text-gray-300">
-                    <span>Cho phép bình luận</span>
-                    <input type="checkbox" checked={settings.privacy.allowComments} onChange={(e)=>setSettings(s=>({
-                      ...s, privacy:{...s.privacy, allowComments:e.target.checked}
-                    }))} className="w-4 h-4" />
-                  </label>
-                  <label className="flex items-center justify-between text-gray-300">
-                    <span>Cho phép Duet</span>
-                    <input type="checkbox" checked={settings.privacy.allowDuet} onChange={(e)=>setSettings(s=>({
-                      ...s, privacy:{...s.privacy, allowDuet:e.target.checked}
-                    }))} className="w-4 h-4" />
-                  </label>
-                  <Button onClick={save} className="bg-[#FE2C55] hover:bg-[#FE2C55]/90 text-white">Lưu cài đặt</Button>
-                </CardContent>
-              </Card>
+              <PrivacySettingsSection
+                settings={settings.privacy}
+                onUpdate={(key, value) => {
+                  setSettings(s => ({
+                    ...s,
+                    privacy: { ...s.privacy, [key]: value }
+                  }));
+                  save();
+                }}
+              />
             )}
 
             {active === 'notifications' && (
-              <Card className="bg-[#1e1e1e] border-gray-800">
-                <CardHeader>
-                  <CardTitle className="text-white">Thông báo</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {(['likes','comments','newFollowers','mentions'] as (keyof typeof settings.notifications)[]).map((k)=> (
-                    <label key={k} className="flex items-center justify-between text-gray-300">
-                      <span>{k==='likes'?'Lượt thích':k==='comments'?'Bình luận':k==='newFollowers'?'Người theo dõi mới':'Nhắc đến bạn'}</span>
-                      <input type="checkbox" checked={settings.notifications[k]} onChange={(e)=>setSettings(s=>({
-                        ...s, notifications:{...s.notifications, [k]: e.target.checked}
-                      }))} className="w-4 h-4" />
-                    </label>
-                  ))}
-                  <Button onClick={save} className="bg-[#FE2C55] hover:bg-[#FE2C55]/90 text-white">Lưu cài đặt</Button>
-                </CardContent>
-              </Card>
+              <NotificationSettingsSection
+                settings={settings.notifications}
+                onUpdate={(key, value) => {
+                  setSettings(s => ({
+                    ...s,
+                    notifications: { ...s.notifications, [key]: value }
+                  }));
+                  save();
+                }}
+              />
             )}
 
             {active === 'language' && (

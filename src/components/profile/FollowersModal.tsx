@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { socialApi } from '@/api/social.api';
-import { Avatar } from '@/components/common/Avatar';
+import { UserListItem } from './UserListItem';
 import { Button } from '@/components/ui/button';
 import { X, Users } from 'lucide-react';
-import { getAvatarUrl, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/app/store/auth';
-import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 interface FollowersModalProps {
@@ -19,7 +18,6 @@ export function FollowersModal({ userId, initialTab = 'followers', onClose }: Fo
   const [activeTab, setActiveTab] = useState<'followers' | 'following'>(initialTab);
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((s) => s.user);
-  const navigate = useNavigate();
   
   // Kiểm tra xem đây có phải là profile của chính người đăng nhập không
   const isOwnProfile = currentUser?.id === userId;
@@ -130,63 +128,28 @@ export function FollowersModal({ userId, initialTab = 'followers', onClose }: Fo
           ) : users && users.length > 0 ? (
             <div className="space-y-2">
               {users.map((user: any) => {
-                // API trả về followerId (cho followers) hoặc followeeId (cho following)
                 const targetUserId = activeTab === 'followers' ? user.followerId : user.followeeId;
                 const username = user.username ?? user.user_name ?? '';
                 const fullName = user.fullName ?? user.full_name ?? '';
-                const avatar = getAvatarUrl(user.avatarUrl ?? user.avatar_url);
+                const avatarUrl = user.avatarUrl ?? user.avatar_url;
                 const isFollowing = user.checkfollow ?? user.is_following ?? user.isFollowing ?? false;
                 const isCurrentUser = currentUser?.id === targetUserId;
-                
-                // Logic hiển thị nút Follow:
-                // - Không hiển thị nếu là chính mình
-                // - Nếu xem profile của mình (isOwnProfile = true):
-                //   + Tab "Người theo dõi": hiển thị nút
-                //   + Tab "Đang theo dõi": KHÔNG hiển thị (đã follow rồi)
-                // - Nếu xem profile người khác (isOwnProfile = false):
-                //   + Hiển thị nút ở CẢ 2 tab
-                const shouldShowFollowButton = !isCurrentUser && (
-                  activeTab === 'followers' || !isOwnProfile
-                );
+                const shouldShowFollowButton = activeTab === 'followers' || !isOwnProfile;
 
                 return (
-                  <div
+                  <UserListItem
                     key={targetUserId}
-                    className="flex items-center gap-3 bg-[#121212] rounded-lg p-3 hover:bg-gray-800 transition-all border border-gray-800/50 group"
-                  >
-                    <button
-                      onClick={() => {
-                        navigate(`/user/${targetUserId}`);
-                        onClose();
-                      }}
-                      className="flex items-center gap-3 flex-1 min-w-0"
-                    >
-                      <Avatar src={avatar} alt={username} size="md" className="ring-2 ring-gray-800 group-hover:ring-gray-700 transition-all" />
-                      <div className="flex-1 min-w-0 text-left">
-                        <p className="text-white text-sm font-bold truncate">{fullName || username}</p>
-                        <p className="text-gray-400 text-xs truncate">@{username}</p>
-                      </div>
-                    </button>
-
-                    {shouldShowFollowButton && (
-                      <Button
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          followMutation.mutate({ targetUserId, isFollowing });
-                        }}
-                        disabled={followMutation.isPending}
-                        className={cn(
-                          'px-4 h-8 text-xs font-semibold rounded-md transition-all',
-                          isFollowing
-                            ? 'bg-transparent border border-gray-700 text-gray-300 hover:border-red-500/50 hover:text-red-500 hover:bg-red-500/10'
-                            : 'bg-[#FE2C55] hover:bg-[#FE2C55]/90 text-white border-none'
-                        )}
-                      >
-                        {isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
-                      </Button>
-                    )}
-                  </div>
+                    userId={targetUserId}
+                    username={username}
+                    fullName={fullName}
+                    avatarUrl={avatarUrl}
+                    isFollowing={isFollowing}
+                    isCurrentUser={isCurrentUser}
+                    showFollowButton={shouldShowFollowButton}
+                    onFollowClick={() => followMutation.mutate({ targetUserId, isFollowing })}
+                    onClose={onClose}
+                    isPending={followMutation.isPending}
+                  />
                 );
               })}
             </div>

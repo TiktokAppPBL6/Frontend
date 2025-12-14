@@ -1,4 +1,4 @@
-import axiosClient, { shouldUseMock } from './axiosClient';
+import axiosClient from './axiosClient';
 import type { Report, ReportCreateRequest, ReportUpdateRequest, ID } from '@/types';
 export const reportsApi = {
   // Create report
