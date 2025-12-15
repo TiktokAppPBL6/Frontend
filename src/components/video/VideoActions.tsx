@@ -3,7 +3,6 @@ import { Video } from '@/types';
 import {
   Heart,
   MessageCircle,
-  Share2,
   Bookmark,
   Captions,
   Volume2,
@@ -48,7 +47,6 @@ export function VideoActions({
   const initialLikeCount = v.likeCount ?? v.likes_count ?? 0;
   const initialIsBookmarked = v.isBookmarked ?? v.is_bookmarked ?? false;
   const commentsCount = v.commentsCount ?? v.comments_count ?? 0;
-  const sharesCount = v.shareCount ?? v.shares_count ?? 0;
 
   const [isLiked, setIsLiked] = useState<boolean>(initialIsLiked);
   const [likeCount, setLikeCount] = useState<number>(initialLikeCount);
@@ -115,24 +113,6 @@ export function VideoActions({
       navigate(`/video/${video.id}#comments`);
     }
   }, [onCommentClick, navigate, video.id]);
-
-  const handleShare = useCallback(async () => {
-    const shareUrl = `${window.location.origin}/video/${video.id}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: video.title,
-          text: video.description,
-          url: shareUrl,
-        });
-      } catch (err) {
-        console.log('Share failed:', err);
-      }
-    } else {
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success('Đã sao chép link!');
-    }
-  }, [video.id, video.title, video.description]);
 
   const handleBookmark = useCallback(() => {
     bookmarkMutation.mutate(!isBookmarked);
