@@ -51,7 +51,7 @@ export const VideoCore = forwardRef<HTMLDivElement, VideoCoreProps>(
           playsInline
           preload="metadata"
           crossOrigin="anonymous"
-          onError={(e) => {
+          onError={() => {
             console.error('Video load error:', videoUrl);
           }}
         />
@@ -63,7 +63,7 @@ export const VideoCore = forwardRef<HTMLDivElement, VideoCoreProps>(
             src={audioViUrl}
             preload="metadata"
             crossOrigin="anonymous"
-            onError={(e) => {
+            onError={() => {
               // Gracefully handle CORS errors - app will continue without dubbing
               if (audioRef.current) {
                 audioRef.current.src = ''; // Clear failed source

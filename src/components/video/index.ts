@@ -5,17 +5,14 @@
  */
 
 // Core video components
-export { VideoPlayer } from './VideoPlayer';
 export { VideoActions } from './VideoActions';
 export { VideoUserInfo } from './VideoUserInfo';
 export { SubtitleDisplay } from './SubtitleDisplay';
+export { VideoCore } from './VideoCore';
+export { UniversalVideoPlayer } from './UniversalVideoPlayer';
 
 // Feed components (for Home & Following pages)
 export { VideoFeed } from './VideoFeed';
-export { FeedVideo } from './FeedVideo';
-
-// Single video component (for VideoDetail page)
-export { SingleVideoPlayer } from './SingleVideoPlayer';
 
 // Empty state component
 export { EmptyState } from './EmptyState';
