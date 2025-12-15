@@ -24,7 +24,7 @@ export function VideoAvatarWithFollow({
   const [avatarError, setAvatarError] = useState(false);
 
   return (
-    <div className="relative w-12 pb-1" style={{ pointerEvents: 'auto' }}>
+    <div className="relative w-12 pb-2" style={{ pointerEvents: 'auto' }}>
       <button
         onClick={(e) => {
           e.preventDefault();
@@ -33,7 +33,7 @@ export function VideoAvatarWithFollow({
         }}
         className="block transition-transform hover:scale-105 cursor-pointer"
       >
-        <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 shadow-lg">
+        <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 shadow-lg ring-2 ring-black/20">
           <img
             src={avatarError ? '/avatar.jpg' : ownerAvatar}
             alt={ownerUsername}
@@ -52,7 +52,7 @@ export function VideoAvatarWithFollow({
           }}
           disabled={isFollowPending}
           aria-label={isFollowing ? 'Bỏ theo dõi' : 'Theo dõi'}
-          className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#FE2C55] text-white flex items-center justify-center text-sm font-bold shadow-md ring-2 ring-white hover:brightness-110 disabled:opacity-70 transition-all cursor-pointer"
+          className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#FE2C55] text-white flex items-center justify-center text-sm font-bold shadow-lg ring-2 ring-white hover:brightness-110 disabled:opacity-70 transition-all cursor-pointer"
         >
           {isFollowing ? '✓' : '+'}
         </button>

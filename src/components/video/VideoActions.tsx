@@ -149,7 +149,7 @@ export function VideoActions({
   const hasAudioVi = v.audio_vi || v.audioVi;
 
   return (
-    <div className="flex flex-col gap-4 relative z-50" style={{ pointerEvents: 'auto' }}>
+    <div className="flex flex-col gap-3 relative z-50" style={{ pointerEvents: 'auto' }}>
       {/* Like */}
       <ActionButton
         icon={Heart}
@@ -173,9 +173,6 @@ export function VideoActions({
         activeColor="yellow"
         onClick={handleBookmark}
       />
-
-      {/* Share */}
-      <ActionButton icon={Share2} count={sharesCount} onClick={handleShare} />
 
       {/* Subtitle Menu */}
       <div className="relative">
@@ -220,7 +217,6 @@ export function VideoActions({
           active={isDubbing}
           activeColor="blue"
           onClick={onDubbingToggle}
-          label={isDubbing ? 'Audio gốc (EN)' : 'Lồng tiếng (VI)'}
         />
       )}
 

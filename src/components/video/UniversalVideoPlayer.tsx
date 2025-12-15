@@ -155,41 +155,40 @@ function UniversalVideoPlayerComponent({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full flex items-center justify-center bg-black"
+      className="relative w-full h-full flex items-center justify-center bg-black overflow-hidden"
     >
-      {/* Main Container with Video and Actions Side by Side */}
-      <div className="relative flex items-end justify-center gap-4 px-4">
-        {/* Video Container - Modern, clean design */}
-        <div className="relative max-w-[800px] max-h-full flex items-center justify-center group">
-          <VideoPlayerWithSubtitles
-            video={video}
-            videoRef={videoRef}
-            audioRef={audioRef}
-            currentTimeRef={currentTimeRef}
-            isMuted={effectiveIsMuted}
-            isDubbing={effectiveIsDubbing}
-            subtitleLanguage={subtitleLanguage}
-            transcriptData={transcriptData}
-            onVideoClick={handleVideoClick}
-          />
+      {/* Full Screen Video Container */}
+      <div className="relative w-full h-full flex items-center justify-center">
+        <VideoPlayerWithSubtitles
+          video={video}
+          videoRef={videoRef}
+          audioRef={audioRef}
+          currentTimeRef={currentTimeRef}
+          isMuted={effectiveIsMuted}
+          isDubbing={effectiveIsDubbing}
+          subtitleLanguage={subtitleLanguage}
+          transcriptData={transcriptData}
+          onVideoClick={handleVideoClick}
+        />
 
-          <VideoProgressBar
-            progress={progress}
-            onProgressClick={handleProgressClick}
-            onProgressMouseDown={handleProgressMouseDown}
-            onProgressMouseMove={handleProgressMouseMove}
-            onProgressMouseUp={handleProgressMouseUp}
-          />
+        {/* Progress Bar - Bottom of screen */}
+        <VideoProgressBar
+          progress={progress}
+          onProgressClick={handleProgressClick}
+          onProgressMouseDown={handleProgressMouseDown}
+          onProgressMouseMove={handleProgressMouseMove}
+          onProgressMouseUp={handleProgressMouseUp}
+        />
 
-          <VideoFeedInfo
-            video={video}
-            ownerUsername={ownerUsername}
-            isOwnVideo={isOwnVideo}
-          />
-        </div>
+        {/* Video Info - Bottom Left */}
+        <VideoFeedInfo
+          video={video}
+          ownerUsername={ownerUsername}
+          isOwnVideo={isOwnVideo}
+        />
 
-        {/* Actions Column - Outside video, aligned with video bottom */}
-        <div className="flex-shrink-0 flex flex-col items-center gap-4 pb-1 relative z-50" style={{ pointerEvents: 'auto' }}>
+        {/* Actions Column - Absolute positioned on right side */}
+        <div className="absolute right-2 bottom-20 flex flex-col items-center gap-3 z-50" style={{ pointerEvents: 'auto' }}>
           <VideoAvatarWithFollow
             ownerId={ownerId}
             ownerAvatar={ownerAvatar}

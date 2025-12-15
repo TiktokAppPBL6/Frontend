@@ -27,7 +27,7 @@ export function VideoPlayerWithSubtitles({
   onVideoClick,
 }: VideoPlayerWithSubtitlesProps) {
   return (
-    <div className="relative">
+    <div className="relative w-full h-full flex items-center justify-center">
       <VideoCore
         video={video}
         videoRef={videoRef}
@@ -37,18 +37,18 @@ export function VideoPlayerWithSubtitles({
         onVideoClick={onVideoClick}
       />
 
-      {/* Subtitles - Smart positioning to avoid UI overlap */}
+      {/* Subtitles - Centered at bottom with more space */}
       {subtitleLanguage !== 'off' && transcriptData?.timestamps && (
         <SubtitleDisplay
           timestamps={transcriptData.timestamps}
           currentTimeRef={currentTimeRef}
           language={subtitleLanguage}
-          className="bottom-16"
+          className="bottom-24"
         />
       )}
 
       {/* Bottom Gradient Overlay for better text readability */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent rounded-b-3xl pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none z-0" />
     </div>
   );
 }

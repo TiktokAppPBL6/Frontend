@@ -10,7 +10,9 @@ interface VideoFeedProps {
 }
 
 function VideoFeedComponent({ videos, isLoading, emptyState }: VideoFeedProps) {
-  const [currentVideoId, setCurrentVideoId] = useState<number | null>(null);
+  const [currentVideoId, setCurrentVideoId] = useState<number | null>(
+    videos.length > 0 ? videos[0].id : null
+  );
 
   const handleVideoInView = useCallback((videoId: number, inView: boolean) => {
     if (inView) {

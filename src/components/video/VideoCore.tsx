@@ -42,15 +42,16 @@ export const VideoCore = forwardRef<HTMLDivElement, VideoCoreProps>(
     return (
       <div
         ref={ref}
-        className={className}
+        className={`w-full h-full flex items-center justify-center bg-black ${className || ''}`}
         onClick={onVideoClick}
       >
-        {/* Main Video Element */}
+        {/* Main Video Element - Fit screen perfectly without overflow */}
         <video
           ref={videoRef}
           src={getMediaUrl(videoUrl)}
           poster={getMediaUrl(thumbnailUrl)}
-          className="w-full h-full object-contain"
+          className="max-w-full max-h-full w-auto h-auto"
+          style={{ objectFit: 'contain' }}
           playsInline
           preload="metadata"
           crossOrigin="anonymous"

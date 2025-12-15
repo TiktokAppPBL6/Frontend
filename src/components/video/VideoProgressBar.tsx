@@ -41,7 +41,7 @@ export function VideoProgressBar({
 
   return (
     <div
-      className="absolute bottom-0 left-0 right-0 px-4 py-4 cursor-pointer z-40 group"
+      className="absolute bottom-14 left-0 right-0 px-4 py-2 cursor-pointer z-30 group"
       onClick={onProgressClick}
       onMouseDown={onProgressMouseDown}
       onMouseMove={handleMouseMove}
