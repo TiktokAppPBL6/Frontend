@@ -1,5 +1,6 @@
 import { forwardRef, RefObject, useEffect } from 'react';
 import { Video } from '@/types';
+import { getMediaUrl } from '@/lib/utils';
 
 interface VideoCoreProps {
   video: Video;
@@ -32,9 +33,11 @@ export const VideoCore = forwardRef<HTMLDivElement, VideoCoreProps>(
       }
     }, [audioRef, isMuted, isDubbing]);
 
-    const videoUrl = (video as any).videoUrl || (video as any).video_url || '';
-    const audioViUrl = (video as any).audioVi || (video as any).audio_vi || '';
-    const thumbnailUrl = (video as any).thumbnailUrl || (video as any).thumbnail_url || '';
+    // Extract URLs from different API response formats
+    const v: any = video;
+    const videoUrl = v.hlsUrl || v.hls_url || v.url || v.videoUrl || v.video_url || '';
+    const audioViUrl = v.audioVi || v.audio_vi || '';
+    const thumbnailUrl = v.thumbUrl || v.thumb_url || v.thumbnailUrl || v.thumbnail_url || '';
 
     return (
       <div
@@ -45,8 +48,8 @@ export const VideoCore = forwardRef<HTMLDivElement, VideoCoreProps>(
         {/* Main Video Element */}
         <video
           ref={videoRef}
-          src={videoUrl}
-          poster={thumbnailUrl}
+          src={getMediaUrl(videoUrl)}
+          poster={getMediaUrl(thumbnailUrl)}
           className="w-full h-full object-contain"
           playsInline
           preload="metadata"
@@ -60,7 +63,7 @@ export const VideoCore = forwardRef<HTMLDivElement, VideoCoreProps>(
         {audioViUrl && (
           <audio
             ref={audioRef}
-            src={audioViUrl}
+            src={getMediaUrl(audioViUrl)}
             preload="metadata"
             crossOrigin="anonymous"
             onError={() => {
