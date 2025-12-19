@@ -4,8 +4,34 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Toptop</title>
-    <meta name="description" content="Ứng dụng chia sẻ video ngắn với tính năng auto-play, like, comment và nhiều hơn nữa" />
+    <title>Toptop - Ứng dụng Video Ngắn</title>
+    <meta name="description" content="Ứng dụng mạng xã hội video ngắn - Khám phá, tạo và chia sẻ video ngắn với cộng đồng. Like, Comment, Follow và nhiều hơn nữa!" />
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#FE2C55" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Toptop" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://toptop.app/" />
+    <meta property="og:title" content="Toptop - Ứng dụng Video Ngắn" />
+    <meta property="og:description" content="Khám phá, tạo và chia sẻ video ngắn với cộng đồng" />
+    <meta property="og:image" content="/og-image.png" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://toptop.app/" />
+    <meta property="twitter:title" content="Toptop - Ứng dụng Video Ngắn" />
+    <meta property="twitter:description" content="Khám phá, tạo và chia sẻ video ngắn với cộng đồng" />
+    <meta property="twitter:image" content="/og-image.png" />
+    
+    <!-- Performance -->
+    <link rel="preconnect" href="https://toptop-backend-api.azurewebsites.net" />
+    <link rel="dns-prefetch" href="https://toptop-backend-api.azurewebsites.net" />
   </head>
   <body>
     <div id="root"></div>

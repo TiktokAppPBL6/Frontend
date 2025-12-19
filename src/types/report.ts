@@ -20,6 +20,7 @@ export interface ReportCreateRequest {
 }
 
 export interface ReportUpdateRequest {
-  status: 'reviewed' | 'resolved' | 'dismissed';
+  status: 'pending' | 'approved' | 'rejected' | 'reviewed' | 'resolved' | 'dismissed';
   note?: string;
+  decision?: string;
 }

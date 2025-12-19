@@ -2,7 +2,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import type { Message } from '@/types';
+import type { Message } from '@/api/messages.api';
 
 interface MessagesListProps {
   messages: Message[];
@@ -37,7 +37,7 @@ export function MessagesList({
 
   return (
     <>
-      {[...messages].reverse().map((msg) => {
+      {messages.map((msg) => {
         const isSender = msg.senderId === currentUserId;
         
         return (
@@ -46,8 +46,8 @@ export function MessagesList({
             className={`flex gap-3 ${isSender ? 'flex-row-reverse' : 'flex-row'}`}
           >
             <Avatar
-              src={isSender ? msg.sender?.avatarUrl : msg.receiver?.avatarUrl}
-              alt={isSender ? msg.sender?.username : msg.receiver?.username}
+              src={undefined}
+              alt={`User ${isSender ? msg.senderId : msg.receiverId}`}
               size="sm"
               className="flex-shrink-0"
             />

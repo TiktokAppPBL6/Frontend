@@ -62,6 +62,46 @@ export const authApi = {
     localStorage.removeItem('user');
   },
   
+  // Test token manually
+  testToken: async (): Promise<{ valid: boolean; user?: any }> => {
+    try {
+      const response = await axiosClient.get<{ valid?: boolean; success?: boolean; user?: any }>(
+        '/auth/test-token'
+      );
+      return {
+        valid: response.data?.valid ?? response.data?.success ?? true,
+        user: response.data?.user,
+      };
+    } catch (error) {
+      return { valid: false };
+    }
+  },
+  
+  // Google login - redirect to Google OAuth
+  googleLogin: () => {
+    window.location.href = `${axiosClient.defaults.baseURL}/auth/google/login`;
+  },
+  
+  // Google callback - handle redirect from Google (usually handled by backend)
+  googleCallback: async (code: string, state?: string): Promise<AuthResponse> => {
+    try {
+      const response = await axiosClient.get<any>('/auth/google/callback', {
+        params: { code, state },
+      });
+      
+      const responseData = response.data;
+      const accessToken = responseData.access_token || responseData.accessToken;
+      const user = responseData.user;
+      
+      return {
+        accessToken,
+        user,
+      };
+    } catch (error) {
+      throw error;
+    }
+  },
+  
   // Verify current password without changing session
   verifyPassword: async (password: string, email?: string): Promise<{ valid: boolean }> => {
     try {
@@ -109,8 +149,8 @@ export const authApi = {
     }
   },
 
-  // Google Login
-  googleLogin: async (credential: string): Promise<AuthResponse> => {
+  // Google Login with credential
+  googleLoginWithCredential: async (credential: string): Promise<AuthResponse> => {
     try {
       const response = await axiosClient.post<any>('/auth/google/login', {
         credential,
@@ -133,7 +173,7 @@ export const authApi = {
   },
 
   // Exchange Google authorization code for token
-  googleCallback: async (code: string): Promise<AuthResponse> => {
+  googleCallbackHandler: async (code: string): Promise<AuthResponse> => {
     try {
       // Call backend callback endpoint directly with code
       const response = await axiosClient.get<any>(`/auth/google/callback`, {

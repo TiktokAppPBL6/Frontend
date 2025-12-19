@@ -1,28 +1,35 @@
 import axiosClient from './axiosClient';
-import type {
-  Message,
-  MessageSendRequest,
-  MessagesResponse,
-  InboxResponse,
-  ID,
-} from '@/types';
+import type { ID } from '@/types';
+
+export interface Message {
+  id: number;
+  senderId: number;
+  receiverId: number;
+  content: string;
+  createdAt: string;
+  seen: boolean;
+}
+
+export interface MessageSendRequest {
+  receiver_id: number;
+  content: string;
+}
+
 export const messagesApi = {
-  // Get inbox (conversations list)
-  getInbox: async (): Promise<InboxResponse> => {
+  // Get inbox - returns list of latest messages
+  getInbox: async (): Promise<Message[]> => {
     try {
-      const response = await axiosClient.get<InboxResponse>('/messages/inbox');
-      
+      const response = await axiosClient.get<Message[]>('/messages/inbox');
       return response.data;
     } catch (error) {
       throw error;
     }
   },
 
-  // Get conversation with a user
-  getConversation: async (userId: ID): Promise<MessagesResponse> => {
+  // Get conversation with specific user
+  getConversation: async (userId: ID): Promise<Message[]> => {
     try {
-      const response = await axiosClient.get<MessagesResponse>(`/messages/conversation/${userId}`);
-      
+      const response = await axiosClient.get<Message[]>(`/messages/conversation/${userId}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -40,20 +47,19 @@ export const messagesApi = {
   },
 
   // Delete message
-  deleteMessage: async (messageId: ID): Promise<void> => {
+  deleteMessage: async (messageId: ID): Promise<string> => {
     try {
-      await axiosClient.delete(`/messages/${messageId}`);
+      const response = await axiosClient.delete<string>(`/messages/${messageId}`);
+      return response.data;
     } catch (error) {
       throw error;
     }
   },
 
-  // Get suggested users (users who haven't been messaged yet)
-  getSuggestedUsers: async (limit: number = 10): Promise<any[]> => {
+  // Get suggested users to message
+  getSuggestedUsers: async (): Promise<any[]> => {
     try {
-      const response = await axiosClient.get(`/messages/suggested-users`, {
-        params: { limit }
-      });
+      const response = await axiosClient.get<any[]>('/messages/suggested-users');
       return response.data;
     } catch (error) {
       throw error;

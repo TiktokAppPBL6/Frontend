@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { commentsApi } from '@/api/comments.api';
-import { Avatar } from '@/components/common/Avatar';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CommentItem } from './CommentItem';
 import { X, Send } from 'lucide-react';
-import { getAvatarUrl, formatDate, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface CommentsModalProps {
   videoId: number;
@@ -65,27 +66,9 @@ export function CommentsModal({ videoId, onClose }: CommentsModalProps) {
         {/* List */}
         <div ref={commentsListRef} className={cn("flex-1 overflow-y-auto p-4 bg-[#121212]", isLoading && 'opacity-60')}>          
           <div className="space-y-3">
-            {data?.comments?.map((c: any) => {
-              // Response fields can be at top level or nested in c.user
-              const u = c.user || {};
-              const username = c.username ?? u.username ?? u.user_name ?? 'user';
-              const fullName = c.fullName ?? c.full_name ?? u.fullName ?? u.full_name ?? '';
-              const avatar = getAvatarUrl(c.avatarUrl ?? c.avatar_url ?? u.avatarUrl ?? u.avatar_url);
-              
-              return (
-                <div key={c.id} className="flex gap-3 bg-[#1E1E1E] rounded-xl p-3 border border-gray-800 hover:border-gray-700 transition-all">
-                  <Avatar src={avatar} alt={username} size="sm" className="ring-2 ring-gray-800" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <p className="text-white text-sm font-bold truncate">{fullName || username}</p>
-                      <span className="text-gray-500 text-xs">· {formatDate(c.createdAt ?? c.created_at)}</span>
-                    </div>
-                    <p className="text-gray-400 text-xs mb-1.5">@{username}</p>
-                    <p className="text-gray-300 text-[13px] leading-relaxed whitespace-pre-wrap break-words">{c.content}</p>
-                  </div>
-                </div>
-              );
-            })}
+            {data?.comments?.map((c: any) => (
+              <CommentItem key={c.id} comment={c} />
+            ))}
 
             {!data?.comments?.length && !isLoading && (
               <div className="text-center py-16">

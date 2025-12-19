@@ -5,8 +5,6 @@ import {
   MessageCircle,
   Bookmark,
   Captions,
-  Volume2,
-  VolumeX,
   Languages,
 } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -15,6 +13,8 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/app/store/auth';
 import { ActionButton } from './ActionButton';
+import { VideoOptionsMenu } from './VideoOptionsMenu';
+import { VolumeControl } from './VolumeControl';
 import { cn } from '@/lib/utils';
 
 interface VideoActionsProps {
@@ -200,14 +200,16 @@ export function VideoActions({
         />
       )}
 
-      {/* Mute/Unmute */}
+      {/* Volume Control with Slider */}
       {onMuteToggle && (
-        <ActionButton
-          icon={isMuted ? VolumeX : Volume2}
-          active={!isMuted}
-          onClick={onMuteToggle}
+        <VolumeControl
+          isMuted={isMuted ?? false}
+          onMuteToggle={onMuteToggle}
         />
       )}
+
+      {/* More Options (Report, Share, etc.) */}
+      <VideoOptionsMenu video={video} />
     </div>
   );
 }

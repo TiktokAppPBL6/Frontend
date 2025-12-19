@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
-import { messagesApi } from '@/api/messages.api';
+import { messagesApi, type Message } from '@/api/messages.api';
 import { usersApi } from '@/api/users.api';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/app/store/auth';
-import type { Message } from '@/types';
 import { ConversationsHeader } from '@/components/messages/ConversationsHeader';
 import { ConversationsList } from '@/components/messages/ConversationsList';
 import { ChatHeader } from '@/components/messages/ChatHeader';
@@ -69,14 +68,14 @@ export function Messages() {
     e.preventDefault();
     if (message.trim() && selectedUserId) {
       sendMutation.mutate({
-        receiverId: selectedUserId,
+        receiver_id: selectedUserId,
         content: message.trim(),
       });
     }
   };
 
   const getConversations = () => {
-    if (!inbox) return [];
+    if (!inbox || inbox.length === 0) return [];
     const conversationsMap = new Map<number, Message>();
     inbox.forEach((msg: Message) => {
       const partnerId = msg.senderId === currentUser?.id ? msg.receiverId : msg.senderId;
@@ -93,11 +92,8 @@ export function Messages() {
 
   const filteredConversations = conversations.filter((msg) => {
     if (!searchQuery) return true;
-    const partnerInfo = msg.senderId === currentUser?.id ? msg.receiver : msg.sender;
     const searchLower = searchQuery.toLowerCase();
     return (
-      partnerInfo?.fullName?.toLowerCase().includes(searchLower) ||
-      partnerInfo?.username?.toLowerCase().includes(searchLower) ||
       msg.content?.toLowerCase().includes(searchLower)
     );
   });

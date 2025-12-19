@@ -169,4 +169,90 @@ export const videosApi = {
       throw error;
     }
   },
+
+  // Create dubbing for video
+  createDubbing: async (
+    videoId: number,
+    data: {
+      target_language: string;
+      speaker_id?: string;
+    }
+  ): Promise<{ message: string; dubbing_id?: number }> => {
+    try {
+      const response = await axiosClient.post<{ message: string; dubbing_id?: number }>(
+        `/videos/${videoId}/dubbing`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Transcribe video (create transcript)
+  transcribeVideo: async (
+    videoId: number,
+    data?: {
+      language?: string;
+    }
+  ): Promise<VideoTranscript> => {
+    try {
+      const response = await axiosClient.post<VideoTranscript>(
+        `/videos/${videoId}/transcribe`,
+        data || {}
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Generate speech from transcript (text-to-speech)
+  generateSpeech: async (
+    videoId: number,
+    data?: {
+      speaker_id?: string;
+      language?: string;
+    }
+  ): Promise<{ message: string; audio_url?: string }> => {
+    try {
+      const response = await axiosClient.post<{ message: string; audio_url?: string }>(
+        `/videos/${videoId}/text-to-speech`,
+        data || {}
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Download latest text-to-speech audio
+  downloadTTSAudio: async (videoId: number): Promise<Blob> => {
+    try {
+      const response = await axiosClient.get(
+        `/videos/${videoId}/text-to-speech/download`,
+        {
+          responseType: 'blob',
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Serve dubbed audio
+  getDubbedAudio: async (audioFilename: string): Promise<Blob> => {
+    try {
+      const response = await axiosClient.get(
+        `/videos/audio/${audioFilename}`,
+        {
+          responseType: 'blob',
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };

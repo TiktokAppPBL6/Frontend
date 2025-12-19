@@ -2,7 +2,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import type { Message } from '@/types';
+import type { Message } from '@/api/messages.api';
 
 interface ConversationsListProps {
   conversations: Message[];
@@ -31,7 +31,6 @@ export function ConversationsList({
     <>
       {conversations.map((msg) => {
         const partnerId = msg.senderId === currentUserId ? msg.receiverId : msg.senderId;
-        const partnerInfo = msg.senderId === currentUserId ? msg.receiver : msg.sender;
         const isSelected = selectedUserId === partnerId;
         
         return (
@@ -43,15 +42,15 @@ export function ConversationsList({
             }`}
           >
             <Avatar
-              src={partnerInfo?.avatarUrl}
-              alt={partnerInfo?.username}
+              src={undefined}
+              alt={`User ${partnerId}`}
               size="md"
             />
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="font-semibold text-sm truncate text-white">
-                  {partnerInfo?.fullName || partnerInfo?.username}
+                  Người dùng #{partnerId}
                 </h3>
                 <span className="text-xs text-gray-500">
                   {formatDistanceToNow(new Date(msg.createdAt), {
@@ -64,6 +63,9 @@ export function ConversationsList({
                 {msg.senderId === currentUserId && 'Bạn: '}
                 {msg.content || '📷 Hình ảnh'}
               </p>
+              {!msg.seen && msg.senderId !== currentUserId && (
+                <div className="w-2 h-2 bg-[#FE2C55] rounded-full mt-1" />
+              )}
             </div>
           </div>
         );

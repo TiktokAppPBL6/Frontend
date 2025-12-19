@@ -1,11 +1,25 @@
 import axiosClient from './axiosClient';
-import type { NotificationsResponse, ID } from '@/types';
+import type { ID } from '@/types';
+
+export interface Notification {
+  id: number;
+  userId: number;
+  type: string;
+  refId?: number;
+  createdAt: string;
+  seen: boolean;
+}
+
 export const notificationsApi = {
   // Get notifications
-  getNotifications: async (): Promise<NotificationsResponse> => {
+  getNotifications: async (params?: { skip?: number; limit?: number }): Promise<Notification[]> => {
     try {
-      const response = await axiosClient.get<NotificationsResponse>('/notifications/');
-      
+      const response = await axiosClient.get<Notification[]>('/notifications/', {
+        params: {
+          skip: params?.skip || 0,
+          limit: params?.limit || 50,
+        },
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -13,28 +27,32 @@ export const notificationsApi = {
   },
 
   // Get unseen count
-  getUnseenCount: async (): Promise<{ count: number }> => {
+  getUnseenCount: async (): Promise<number> => {
     try {
-      const response = await axiosClient.get<{ count: number }>('/notifications/unseen/count');
+      const response = await axiosClient.get<number>('/notifications/unseen/count');
       return response.data;
     } catch (error) {
       throw error;
     }
   },
 
-  // Mark notification as seen
-  markAsSeen: async (notificationId: ID): Promise<void> => {
+  // Mark notifications as seen
+  markAsSeen: async (notificationIds: number[]): Promise<string> => {
     try {
-      await axiosClient.post('/notifications/mark-seen', { notificationId });
+      const response = await axiosClient.post<string>('/notifications/mark-seen', {
+        notification_ids: notificationIds,
+      });
+      return response.data;
     } catch (error) {
       throw error;
     }
   },
 
   // Mark all as seen
-  markAllAsSeen: async (): Promise<void> => {
+  markAllAsSeen: async (): Promise<string> => {
     try {
-      await axiosClient.post('/notifications/mark-all-seen');
+      const response = await axiosClient.post<string>('/notifications/mark-all-seen');
+      return response.data;
     } catch (error) {
       throw error;
     }

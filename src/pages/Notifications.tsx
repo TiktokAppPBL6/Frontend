@@ -1,30 +1,82 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsApi } from '@/api/notifications.api';
-import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
-import { Bell } from 'lucide-react';
+import { Bell, Heart, MessageCircle, UserPlus } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export function Notifications() {
-  const { data, isLoading } = useQuery({
+  const queryClient = useQueryClient();
+
+  const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications'],
-    queryFn: notificationsApi.getNotifications,
+    queryFn: () => notificationsApi.getNotifications(),
+    refetchInterval: 5000, // Auto refresh every 5 seconds
+  });
+
+  const { data: unseenCount } = useQuery({
+    queryKey: ['notifications-unseen-count'],
+    queryFn: notificationsApi.getUnseenCount,
+    refetchInterval: 5000,
+  });
+
+  const markAllSeenMutation = useMutation({
+    mutationFn: notificationsApi.markAllAsSeen,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unseen-count'] });
+      toast.success('Đã đánh dấu tất cả là đã đọc');
+    },
   });
 
   const handleMarkAllSeen = () => {
-    notificationsApi.markAllAsSeen();
+    markAllSeenMutation.mutate();
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'like':
+        return <Heart className="w-5 h-5 text-red-500" />;
+      case 'comment':
+        return <MessageCircle className="w-5 h-5 text-blue-500" />;
+      case 'follow':
+        return <UserPlus className="w-5 h-5 text-green-500" />;
+      default:
+        return <Bell className="w-5 h-5 text-gray-500" />;
+    }
+  };
+
+  const getNotificationMessage = (notification: any) => {
+    switch (notification.type) {
+      case 'like':
+        return 'đã thích video của bạn';
+      case 'comment':
+        return 'đã bình luận về video của bạn';
+      case 'follow':
+        return 'đã theo dõi bạn';
+      default:
+        return 'có hoạt động mới';
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#121212] py-6">
       <div className="container mx-auto max-w-2xl px-4">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-white">Thông báo</h1>
-          {data && data.unseenCount > 0 && (
+          <div>
+            <h1 className="text-2xl font-bold text-white">Thông báo</h1>
+            {unseenCount !== undefined && unseenCount > 0 && (
+              <p className="text-sm text-gray-400 mt-1">
+                {unseenCount} thông báo chưa đọc
+              </p>
+            )}
+          </div>
+          {unseenCount !== undefined && unseenCount > 0 && (
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handleMarkAllSeen}
+              disabled={markAllSeenMutation.isPending}
               className="bg-transparent border-gray-600 text-white hover:bg-gray-800"
             >
               Đánh dấu đã đọc
@@ -33,27 +85,27 @@ export function Notifications() {
         </div>
 
         {isLoading ? (
-          <p className="text-center py-8 text-gray-400">Đang tải...</p>
-        ) : data?.notifications && data.notifications.length > 0 ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FE2C55]"></div>
+          </div>
+        ) : notifications && notifications.length > 0 ? (
           <div className="space-y-2">
-            {data.notifications.map((notification) => (
+            {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`flex items-start gap-4 p-4 rounded-lg border ${
+                className={`flex items-start gap-4 p-4 rounded-lg border transition-colors ${
                   notification.seen 
                     ? 'bg-[#1e1e1e] border-gray-800' 
                     : 'bg-[#2a2a2a] border-[#FE2C55]/30'
                 }`}
               >
-                <Avatar
-                  src={notification.sender?.avatarUrl}
-                  alt={notification.sender?.username}
-                  size="md"
-                />
+                <div className="flex-shrink-0">
+                  {getNotificationIcon(notification.type)}
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-300">
-                    <span className="font-semibold text-white">@{notification.sender?.username}</span>{' '}
-                    {notification.message}
+                    <span className="font-semibold text-white">Người dùng #{notification.userId}</span>{' '}
+                    {getNotificationMessage(notification)}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     {formatDate(notification.createdAt)}
