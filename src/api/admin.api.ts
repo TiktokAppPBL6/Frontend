@@ -104,4 +104,42 @@ export const adminApi = {
       throw error;
     }
   },
+
+  // Analytics Overview
+  getAnalyticsOverview: async (): Promise<{
+    users: {
+      total: number;
+      active: number;
+      new_today: number;
+      new_week: number;
+      new_month: number;
+    };
+    videos: {
+      total: number;
+      public: number;
+      hidden: number;
+      deleted: number;
+      uploaded_today: number;
+      uploaded_week: number;
+      uploaded_month: number;
+    };
+    comments: {
+      total: number;
+      today: number;
+      week: number;
+      month: number;
+    };
+    reports: {
+      total: number;
+      pending: number;
+      closed: number;
+    };
+  }> => {
+    try {
+      const response = await axiosClient.get('/admin/analytics/overview');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };

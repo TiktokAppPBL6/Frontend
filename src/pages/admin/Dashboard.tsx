@@ -5,15 +5,10 @@ import { Link } from 'react-router-dom';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
 export function AdminDashboard() {
-  // Fetch statistics
-  const { data: usersData } = useQuery({
-    queryKey: ['admin-users-stats'],
-    queryFn: () => adminApi.listUsers({ limit: 1 }),
-  });
-
-  const { data: videosData } = useQuery({
-    queryKey: ['admin-videos-stats'],
-    queryFn: () => adminApi.listVideos({ limit: 1 }),
+  // Fetch statistics from analytics API
+  const { data: analyticsData } = useQuery({
+    queryKey: ['admin-analytics-overview'],
+    queryFn: () => adminApi.getAnalyticsOverview(),
   });
 
   const { data: videosRecent } = useQuery({
@@ -55,7 +50,7 @@ export function AdminDashboard() {
   const stats = [
     {
       title: 'Tổng Users',
-      value: usersData?.total || 0,
+      value: analyticsData?.users.total || 0,
       icon: Users,
       gradient: 'from-blue-500 via-blue-600 to-cyan-500',
       color: '#3b82f6',
@@ -66,7 +61,7 @@ export function AdminDashboard() {
     },
     {
       title: 'Tổng Videos',
-      value: videosData?.total || 0,
+      value: analyticsData?.videos.total || 0,
       icon: Video,
       gradient: 'from-purple-500 via-pink-500 to-purple-600',
       color: '#a855f7',
@@ -77,7 +72,7 @@ export function AdminDashboard() {
     },
     {
       title: 'Reports Chờ',
-      value: '-',
+      value: analyticsData?.reports.pending || 0,
       icon: AlertTriangle,
       gradient: 'from-red-500 via-orange-500 to-red-600',
       color: '#ef4444',
