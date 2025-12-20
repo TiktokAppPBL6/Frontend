@@ -1,7 +1,10 @@
+import { useQuery } from '@tanstack/react-query';
+import { usersApi } from '@/api/users.api';
 import { Avatar } from '@/components/common/Avatar';
 import { Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { getAvatarUrl } from '@/lib/utils';
 import type { Message } from '@/api/messages.api';
 
 interface ConversationsListProps {
@@ -33,6 +36,13 @@ export function ConversationsList({
         const partnerId = msg.senderId === currentUserId ? msg.receiverId : msg.senderId;
         const isSelected = selectedUserId === partnerId;
         
+        // Fetch user info for this conversation
+        const { data: partnerUser } = useQuery({
+          queryKey: ['user', partnerId],
+          queryFn: () => usersApi.getUser(partnerId),
+          staleTime: 1000 * 60 * 5, // Cache 5 phút
+        });
+        
         return (
           <div
             key={msg.id}
@@ -42,15 +52,15 @@ export function ConversationsList({
             }`}
           >
             <Avatar
-              src={undefined}
-              alt={`User ${partnerId}`}
+              src={getAvatarUrl(partnerUser?.avatarUrl)}
+              alt={partnerUser?.username || `User ${partnerId}`}
               size="md"
             />
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="font-semibold text-sm truncate text-white">
-                  Người dùng #{partnerId}
+                  {partnerUser?.username || `Người dùng #${partnerId}`}
                 </h3>
                 <span className="text-xs text-gray-500">
                   {formatDistanceToNow(new Date(msg.createdAt), {

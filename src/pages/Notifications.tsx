@@ -1,24 +1,132 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { notificationsApi } from '@/api/notifications.api';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
-import { Bell, Heart, MessageCircle, UserPlus } from 'lucide-react';
+import { Bell, Heart, MessageCircle, UserPlus, AlertCircle, Ban, VideoOff } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { WebSocketService } from '@/services/websocket';
 
+/**
+ * Notifications Page - WebSocket Integration theo BACKEND_IMPLEMENTATION_GUIDE.md
+ * - Subscribe to "notification:new" event
+ * - Subscribe to "notification:unseen_count" event
+ * - Subscribe to admin events: "admin:user_banned", "admin:video_deleted", "admin:report_resolved"
+ * - Call markNotificationsAsSeen when opening page
+ */
 export function Notifications() {
   const queryClient = useQueryClient();
 
+  // Query notifications (no polling - use WebSocket)
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications'],
     queryFn: () => notificationsApi.getNotifications(),
-    refetchInterval: 5000, // Auto refresh every 5 seconds
+    // Removed refetchInterval - use WebSocket instead
   });
 
+  // Query unseen count (no polling - use WebSocket)
   const { data: unseenCount } = useQuery({
     queryKey: ['notifications-unseen-count'],
     queryFn: notificationsApi.getUnseenCount,
-    refetchInterval: 5000,
+    // Removed refetchInterval - use WebSocket instead
   });
+
+  // WebSocket Integration - Subscribe to events
+  useEffect(() => {
+    const ws = WebSocketService.getInstance();
+
+    // Handler for new notification
+    const handleNewNotification = (event: any) => {
+      console.log('🔔 New notification:', event);
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unseen-count'] });
+      // Show toast
+      toast.success(`Thông báo mới: ${event.data.message || 'Bạn có thông báo mới'}`);
+    };
+
+    // Handler for unseen count update
+    const handleUnseenCount = (event: any) => {
+      console.log('📊 Unseen count update:', event);
+      queryClient.setQueryData(['notifications-unseen-count'], event.data.count);
+    };
+
+    // Handler for admin events
+    const handleUserBanned = (event: any) => {
+      console.log('🚫 User banned:', event);
+      toast.error(
+        <div className="flex items-center gap-2">
+          <Ban className="w-5 h-5" />
+          <div>
+            <div className="font-semibold">Tài khoản bị khóa</div>
+            <div className="text-sm">{event.data.reason || 'Vi phạm chính sách'}</div>
+          </div>
+        </div>,
+        { duration: 10000 }
+      );
+      // Refresh notifications
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    };
+
+    const handleVideoDeleted = (event: any) => {
+      console.log('🗑️ Video deleted:', event);
+      toast.error(
+        <div className="flex items-center gap-2">
+          <VideoOff className="w-5 h-5" />
+          <div>
+            <div className="font-semibold">Video bị xóa</div>
+            <div className="text-sm">{event.data.reason || 'Vi phạm nội dung'}</div>
+          </div>
+        </div>,
+        { duration: 10000 }
+      );
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    };
+
+    const handleReportResolved = (event: any) => {
+      console.log('✅ Report resolved:', event);
+      toast.success(
+        <div className="flex items-center gap-2">
+          <AlertCircle className="w-5 h-5" />
+          <div>
+            <div className="font-semibold">Báo cáo đã xử lý</div>
+            <div className="text-sm">{event.data.result || 'Đã giải quyết'}</div>
+          </div>
+        </div>,
+        { duration: 10000 }
+      );
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    };
+
+    // Subscribe to WebSocket events
+    ws.on('notification:new', handleNewNotification);
+    ws.on('notification:unseen_count', handleUnseenCount);
+    ws.on('admin:user_banned', handleUserBanned);
+    ws.on('admin:video_deleted', handleVideoDeleted);
+    ws.on('admin:report_resolved', handleReportResolved);
+
+    // Cleanup on unmount
+    return () => {
+      ws.off('notification:new', handleNewNotification);
+      ws.off('notification:unseen_count', handleUnseenCount);
+      ws.off('admin:user_banned', handleUserBanned);
+      ws.off('admin:video_deleted', handleVideoDeleted);
+      ws.off('admin:report_resolved', handleReportResolved);
+    };
+  }, [queryClient]);
+
+  // Mark all as seen when opening page
+  useEffect(() => {
+    if (!notifications || notifications.length === 0) return;
+
+    const ws = WebSocketService.getInstance();
+    const unseenIds = notifications
+      .filter((notif: any) => !notif.is_read)
+      .map((notif: any) => notif.id);
+
+    if (unseenIds.length > 0) {
+      ws.markNotificationsAsSeen(unseenIds);
+    }
+  }, [notifications]);
 
   const markAllSeenMutation = useMutation({
     mutationFn: notificationsApi.markAllAsSeen,
@@ -41,6 +149,12 @@ export function Notifications() {
         return <MessageCircle className="w-5 h-5 text-blue-500" />;
       case 'follow':
         return <UserPlus className="w-5 h-5 text-green-500" />;
+      case 'admin_ban':
+        return <Ban className="w-5 h-5 text-red-600" />;
+      case 'admin_delete':
+        return <VideoOff className="w-5 h-5 text-red-600" />;
+      case 'admin_resolve':
+        return <AlertCircle className="w-5 h-5 text-green-600" />;
       default:
         return <Bell className="w-5 h-5 text-gray-500" />;
     }
@@ -54,6 +168,12 @@ export function Notifications() {
         return 'đã bình luận về video của bạn';
       case 'follow':
         return 'đã theo dõi bạn';
+      case 'admin_ban':
+        return 'đã khóa tài khoản của bạn';
+      case 'admin_delete':
+        return 'đã xóa video của bạn';
+      case 'admin_resolve':
+        return 'đã xử lý báo cáo của bạn';
       default:
         return 'có hoạt động mới';
     }

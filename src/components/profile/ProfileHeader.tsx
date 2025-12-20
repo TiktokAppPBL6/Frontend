@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/common/Avatar';
-import { MoreVertical, Flag } from 'lucide-react';
+import { MoreVertical, Flag, MessageCircle } from 'lucide-react';
 import { ReportModal } from '@/components/common/ReportModal';
 import { formatNumber, getAvatarUrl } from '@/lib/utils';
 
@@ -34,6 +35,11 @@ export function ProfileHeader({
 }: ProfileHeaderProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const navigate = useNavigate();
+
+  const handleMessageClick = () => {
+    navigate(`/messages/${user.id}`);
+  };
 
   return (
     <>
@@ -83,6 +89,16 @@ export function ProfileHeader({
                     }
                   >
                     {isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
+                  </Button>
+
+                  {/* Message Button */}
+                  <Button
+                    onClick={handleMessageClick}
+                    variant="outline"
+                    className="bg-[#1e1e1e] border-gray-700 hover:bg-gray-800 text-white px-6"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Nhắn tin
                   </Button>
                   
                   {/* Report User Menu */}

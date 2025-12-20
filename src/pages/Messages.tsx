@@ -11,7 +11,14 @@ import { ChatHeader } from '@/components/messages/ChatHeader';
 import { MessagesList } from '@/components/messages/MessagesList';
 import { MessageInput } from '@/components/messages/MessageInput';
 import { EmptyChatState } from '@/components/messages/EmptyChatState';
+import { WebSocketService } from '@/services/websocket';
 
+/**
+ * Messages Page - WebSocket Integration theo BACKEND_IMPLEMENTATION_GUIDE.md
+ * - Subscribe to "message:new" event
+ * - Subscribe to "message:seen" event
+ * - Call markMessagesAsSeen khi viewing conversation
+ */
 export function Messages() {
   const { userId } = useParams<{ userId?: string }>();
   const currentUser = useAuthStore((state) => state.user);
@@ -23,17 +30,19 @@ export function Messages() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
+  // Query conversations list (no polling - use WebSocket)
   const { data: inbox, isLoading: inboxLoading } = useQuery({
     queryKey: ['messages', 'inbox'],
     queryFn: messagesApi.getInbox,
-    refetchInterval: 3000,
+    // Removed refetchInterval - use WebSocket instead
   });
 
+  // Query conversation messages (no polling - use WebSocket)
   const { data: conversation, isLoading: conversationLoading } = useQuery({
     queryKey: ['messages', 'conversation', selectedUserId],
     queryFn: () => messagesApi.getConversation(selectedUserId!),
     enabled: !!selectedUserId,
-    refetchInterval: selectedUserId ? 2000 : false,
+    // Removed refetchInterval - use WebSocket instead
   });
 
   const { data: selectedUser } = useQuery({
@@ -41,6 +50,54 @@ export function Messages() {
     queryFn: () => usersApi.getUser(selectedUserId!),
     enabled: !!selectedUserId,
   });
+
+  // WebSocket Integration - Subscribe to events
+  useEffect(() => {
+    const ws = WebSocketService.getInstance();
+
+    // Handler for new messages
+    const handleNewMessage = (event: any) => {
+      console.log('📩 New message received:', event);
+      // Invalidate inbox and conversation queries
+      queryClient.invalidateQueries({ queryKey: ['messages', 'inbox'] });
+      if (selectedUserId && (event.data.sender_id === selectedUserId || event.data.receiver_id === selectedUserId)) {
+        queryClient.invalidateQueries({ queryKey: ['messages', 'conversation', selectedUserId] });
+      }
+      // Auto scroll to bottom
+      setTimeout(scrollToBottom, 100);
+    };
+
+    // Handler for message seen
+    const handleMessageSeen = (event: any) => {
+      console.log('👁️ Message seen:', event);
+      // Update seen status in cache
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+    };
+
+    // Subscribe to WebSocket events
+    ws.on('message:new', handleNewMessage);
+    ws.on('message:seen', handleMessageSeen);
+
+    // Cleanup on unmount
+    return () => {
+      ws.off('message:new', handleNewMessage);
+      ws.off('message:seen', handleMessageSeen);
+    };
+  }, [selectedUserId, queryClient]);
+
+  // Mark messages as seen when viewing conversation
+  useEffect(() => {
+    if (!selectedUserId || !conversation || conversation.length === 0) return;
+
+    const ws = WebSocketService.getInstance();
+    const unseenMessageIds = conversation
+      .filter((msg: Message) => msg.senderId === selectedUserId && !msg.seen)
+      .map((msg: Message) => msg.id);
+
+    if (unseenMessageIds.length > 0) {
+      ws.markMessagesAsSeen(selectedUserId, unseenMessageIds);
+    }
+  }, [selectedUserId, conversation]);
 
   const sendMutation = useMutation({
     mutationFn: messagesApi.sendMessage,
@@ -50,7 +107,7 @@ export function Messages() {
       scrollToBottom();
     },
     onError: () => {
-      toast.error('Kh�ng th? g?i tin nh?n');
+      toast.error('Không thể gửi tin nhắn');
     },
   });
 

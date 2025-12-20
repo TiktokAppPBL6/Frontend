@@ -1,83 +1,79 @@
 import { useQuery } from '@tanstack/react-query';
-import { adminApi, videosApi } from '@/api';
-import { Users, Video, AlertTriangle, TrendingUp, Eye, ArrowUp, ArrowDown, Activity, Home } from 'lucide-react';
+import { adminApi } from '@/api';
+import { Users, Video, AlertTriangle, ArrowUp, ArrowDown, Activity, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
+/**
+ * Admin Dashboard - theo BACKEND_IMPLEMENTATION_GUIDE.md PHẦN 2
+ * - Polling stats/overview (60s)
+ * - Polling stats/charts (60s)  
+ * - Polling stats/recent-activity (30s)
+ */
 export function AdminDashboard() {
-  // Fetch statistics from analytics API
-  const { data: analyticsData } = useQuery({
-    queryKey: ['admin-analytics-overview'],
-    queryFn: () => adminApi.getAnalyticsOverview(),
+  // Fetch statistics from NEW admin API (polling 60s)
+  const { data: statsData } = useQuery({
+    queryKey: ['admin-stats-overview'],
+    queryFn: () => adminApi.getAdminOverview(),
+    refetchInterval: 60000, // Polling every 60s
+    staleTime: 50000,
   });
 
-  const { data: videosRecent } = useQuery({
-    queryKey: ['videos-recent'],
-    queryFn: () => videosApi.getVideos({ page: 1, pageSize: 5 }),
+  // Fetch chart data (polling 60s)
+  const { data: chartsData } = useQuery({
+    queryKey: ['admin-stats-charts'],
+    queryFn: () => adminApi.getAdminCharts(),
+    refetchInterval: 60000,
+    staleTime: 50000,
   });
 
-  // Mock data for charts - 7 days
-  const usersChartData = [
-    { day: 'T2', value: 245 },
-    { day: 'T3', value: 278 },
-    { day: 'T4', value: 295 },
-    { day: 'T5', value: 312 },
-    { day: 'T6', value: 348 },
-    { day: 'T7', value: 389 },
-    { day: 'CN', value: 425 },
-  ];
+  // Fetch recent activity (polling 30s)
+  // const { data: recentData } = useQuery({
+  //   queryKey: ['admin-recent-activity'],
+  //   queryFn: () => adminApi.getRecentActivity(10),
+  //   refetchInterval: 30000, // Polling every 30s
+  //   staleTime: 25000,
+  // });
 
-  const videosChartData = [
-    { day: 'T2', value: 82 },
-    { day: 'T3', value: 95 },
-    { day: 'T4', value: 108 },
-    { day: 'T5', value: 125 },
-    { day: 'T6', value: 142 },
-    { day: 'T7', value: 158 },
-    { day: 'CN', value: 176 },
-  ];
-
-  const reportsChartData = [
-    { day: 'T2', value: 28 },
-    { day: 'T3', value: 35 },
-    { day: 'T4', value: 32 },
-    { day: 'T5', value: 29 },
-    { day: 'T6', value: 26 },
-    { day: 'T7', value: 24 },
-    { day: 'CN', value: 21 },
-  ];
+  // Transform chart data from backend format
+  const usersChartData = chartsData?.users_chart || [];
+  const videosChartData = chartsData?.videos_chart || [];
+  const reportsChartData = chartsData?.reports_chart || [];
+  // const engagementChartData = chartsData?.engagement_chart || [];
 
   const stats = [
     {
       title: 'Tổng Users',
-      value: analyticsData?.users.total || 0,
+      value: statsData?.users.total || 0,
       icon: Users,
       gradient: 'from-blue-500 via-blue-600 to-cyan-500',
       color: '#3b82f6',
       link: '/admin/users',
-      trend: '+12%',
+      trend: `+${statsData?.users.new_today || 0} hôm nay`,
       trendUp: true,
       chartData: usersChartData,
+      subtitle: `Active 7d: ${statsData?.users.active_7d || 0} | Banned: ${statsData?.users.banned || 0}`,
     },
     {
       title: 'Tổng Videos',
-      value: analyticsData?.videos.total || 0,
+      value: statsData?.videos.total || 0,
       icon: Video,
       gradient: 'from-purple-500 via-pink-500 to-purple-600',
       color: '#a855f7',
       link: '/admin/videos',
-      trend: '+8%',
+      trend: `+${statsData?.videos.new_today || 0} hôm nay`,
       trendUp: true,
       chartData: videosChartData,
+      subtitle: `Public: ${statsData?.videos.public || 0} | Private: ${statsData?.videos.private || 0}`,
     },
     {
       title: 'Reports Chờ',
-      value: analyticsData?.reports.pending || 0,
+      value: statsData?.reports.pending || 0,
       icon: AlertTriangle,
       gradient: 'from-red-500 via-orange-500 to-red-600',
       color: '#ef4444',
       link: '/admin/reports',
-      trend: '-5%',
+      trend: `${statsData?.reports.resolved_today || 0} resolved hôm nay`,
       trendUp: false,
       chartData: reportsChartData,
     },
@@ -214,7 +210,8 @@ export function AdminDashboard() {
             </Link>
           </div>
           <div className="space-y-4">
-            {videosRecent?.videos?.slice(0, 5).map((video) => (
+            {/* TODO: Add recent videos section */}
+            {/* {videosRecent?.videos?.slice(0, 5).map((video: any) => (
               <div
                 key={video.id}
                 className="group flex items-center gap-5 p-5 bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm rounded-2xl hover:from-white/10 hover:to-white/15 transition-all duration-500 border border-white/10 hover:border-white/20 hover:scale-[1.02]"
@@ -235,18 +232,18 @@ export function AdminDashboard() {
                     @{video.owner?.username || video.username}
                   </p>
                 </div>
-                <div className="flex items-center gap-8 text-sm">
-                  <div className="flex flex-col items-center gap-1 group-hover:scale-110 transition-transform">
-                    <Eye className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors" />
-                    <span className="font-bold text-gray-300 group-hover:text-blue-300">{video.viewCount || 0}</span>
+                <div className="flex items-center gap-6 text-sm">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-xs text-gray-500 font-medium">Views</span>
+                    <span className="font-bold text-gray-300">{video.viewCount || 0}</span>
                   </div>
-                  <div className="flex flex-col items-center gap-1 group-hover:scale-110 transition-transform">
-                    <TrendingUp className="w-5 h-5 text-gray-400 group-hover:text-pink-400 transition-colors" />
-                    <span className="font-bold text-gray-300 group-hover:text-pink-300">{video.likeCount || 0}</span>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-xs text-gray-500 font-medium">Likes</span>
+                    <span className="font-bold text-gray-300">{video.likeCount || 0}</span>
                   </div>
                 </div>
               </div>
-            ))}
+            ))} */}
           </div>
         </div>
       </div>

@@ -1,5 +1,89 @@
+/**
+ * Admin API Client
+ * Theo BACKEND_IMPLEMENTATION_GUIDE.md - PHẦN 2
+ */
+
 import axiosClient from './axiosClient';
 import type { ID } from '@/types';
+
+// ==================== TYPES ====================
+
+export interface AdminStats {
+  users: {
+    total: number;
+    active_7d: number;
+    new_today: number;
+    banned: number;
+  };
+  videos: {
+    total: number;
+    public: number;
+    private: number;
+    new_today: number;
+  };
+  reports: {
+    total: number;
+    pending: number;
+    resolved: number;
+    rejected: number;
+    resolved_today: number;
+  };
+  engagement: {
+    total_likes: number;
+    total_comments: number;
+    total_follows: number;
+    total_views: number;
+  };
+}
+
+export interface ChartDataPoint {
+  date: string;
+  [key: string]: string | number;
+}
+
+export interface AdminCharts {
+  users_chart: ChartDataPoint[];
+  videos_chart: ChartDataPoint[];
+  reports_chart: ChartDataPoint[];
+  engagement_chart: ChartDataPoint[];
+}
+
+export interface RecentActivity {
+  recent_users: any[];
+  recent_videos: any[];
+  recent_reports: any[];
+}
+
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sort_by?: string;
+  order?: 'asc' | 'desc';
+}
+
+export interface UserListParams extends PaginationParams {
+  status?: 'active' | 'banned' | 'all';
+}
+
+export interface VideoListParams extends PaginationParams {
+  visibility?: 'public' | 'private' | 'all';
+}
+
+export interface ReportListParams extends PaginationParams {
+  status?: 'pending' | 'resolved' | 'rejected' | 'all';
+  target_type?: 'video' | 'comment' | 'user' | 'all';
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
 
 export interface AdminActionRequest {
   action: 'approve' | 'reject' | 'delete' | 'ban' | 'unban' | 'suspend';
@@ -13,7 +97,203 @@ export interface AdminTestResult {
 }
 
 export const adminApi = {
-  // ===== Analytics =====
+  // ==================== STATS APIS (theo PHẦN 2) ====================
+  
+  /**
+   * GET /api/v1/admin/stats/overview
+   * Polling: 60s
+   */
+  getAdminOverview: async (): Promise<AdminStats> => {
+    const response = await axiosClient.get('/admin/stats/overview');
+    return response.data;
+  },
+
+  /**
+   * GET /api/v1/admin/stats/charts
+   * Polling: 60s
+   */
+  getAdminCharts: async (): Promise<AdminCharts> => {
+    const response = await axiosClient.get('/admin/stats/charts');
+    return response.data;
+  },
+
+  /**
+   * GET /api/v1/admin/stats/recent-activity
+   * Polling: 30s
+   */
+  getRecentActivity: async (limit = 10): Promise<RecentActivity> => {
+    const response = await axiosClient.get('/admin/stats/recent-activity', {
+      params: { limit }
+    });
+    return response.data;
+  },
+
+  // ==================== USER MANAGEMENT (theo PHẦN 2) ====================
+
+  /**
+   * GET /api/v1/admin/users
+   * Pagination, search, filter by status
+   */
+  getAdminUsers: async (params: UserListParams = {}) => {
+    const response = await axiosClient.get('/admin/users', { params });
+    return response.data;
+  },
+
+  /**
+   * GET /api/v1/admin/users/{user_id}
+   * Chi tiết user + stats + recent activities
+   */
+  getAdminUserDetail: async (userId: number) => {
+    const response = await axiosClient.get(`/admin/users/${userId}`);
+    return response.data;
+  },
+
+  /**
+   * POST /api/v1/admin/users/{user_id}/ban
+   * Ban user → WebSocket event "admin:user_banned"
+   */
+  banUser: async (userId: number, reason: string) => {
+    const response = await axiosClient.post(`/admin/users/${userId}/ban`, { reason });
+    return response.data;
+  },
+
+  /**
+   * POST /api/v1/admin/users/{user_id}/unban
+   */
+  unbanUser: async (userId: number) => {
+    const response = await axiosClient.post(`/admin/users/${userId}/unban`);
+    return response.data;
+  },
+
+  /**
+   * DELETE /api/v1/admin/users/{user_id}
+   * Xóa user + cascade tất cả data
+   */
+  deleteUser: async (userId: number, reason: string) => {
+    const response = await axiosClient.delete(`/admin/users/${userId}`, {
+      data: { reason }
+    });
+    return response.data;
+  },
+
+  /**
+   * PUT /api/v1/admin/users/{user_id}/role
+   * Update role: user, moderator, admin
+   */
+  updateUserRole: async (userId: number, role: string) => {
+    const response = await axiosClient.put(`/admin/users/${userId}/role`, { role });
+    return response.data;
+  },
+
+  /**
+   * POST /api/v1/admin/users/{user_id}/verify
+   * Verify user (blue checkmark)
+   */
+  verifyUser: async (userId: number) => {
+    const response = await axiosClient.post(`/admin/users/${userId}/verify`);
+    return response.data;
+  },
+
+  // ==================== VIDEO MANAGEMENT (theo PHẦN 2) ====================
+
+  /**
+   * GET /api/v1/admin/videos
+   * Pagination, search, filter by visibility
+   */
+  getAdminVideos: async (params: VideoListParams = {}) => {
+    const response = await axiosClient.get('/admin/videos', { params });
+    return response.data;
+  },
+
+  /**
+   * GET /api/v1/admin/videos/{video_id}
+   * Chi tiết video + stats + comments + reports
+   */
+  getAdminVideoDetail: async (videoId: number) => {
+    const response = await axiosClient.get(`/admin/videos/${videoId}`);
+    return response.data;
+  },
+
+  /**
+   * PUT /api/v1/admin/videos/{video_id}/visibility
+   * Update visibility: public, private
+   */
+  updateVideoVisibility: async (videoId: number, visibility: 'public' | 'private') => {
+    const response = await axiosClient.put(`/admin/videos/${videoId}/visibility`, { visibility });
+    return response.data;
+  },
+
+  /**
+   * DELETE /api/v1/admin/videos/{video_id}
+   * Xóa video → WebSocket event "admin:video_deleted"
+   */
+  deleteVideo: async (videoId: number, reason: string) => {
+    const response = await axiosClient.delete(`/admin/videos/${videoId}`, {
+      data: { reason }
+    });
+    return response.data;
+  },
+
+  /**
+   * POST /api/v1/admin/videos/bulk-delete
+   */
+  bulkDeleteVideos: async (videoIds: number[], reason: string) => {
+    const response = await axiosClient.post('/admin/videos/bulk-delete', {
+      video_ids: videoIds,
+      reason
+    });
+    return response.data;
+  },
+
+  // ==================== REPORT MANAGEMENT (theo PHẦN 2) ====================
+
+  /**
+   * GET /api/v1/admin/reports
+   * Pagination, filter by status, target_type
+   */
+  getAdminReports: async (params: ReportListParams = {}) => {
+    const response = await axiosClient.get('/admin/reports', { params });
+    return response.data;
+  },
+
+  /**
+   * GET /api/v1/admin/reports/{report_id}
+   * Chi tiết report + reporter + target info
+   */
+  getAdminReportDetail: async (reportId: number) => {
+    const response = await axiosClient.get(`/admin/reports/${reportId}`);
+    return response.data;
+  },
+
+  /**
+   * POST /api/v1/admin/reports/{report_id}/resolve
+   * Resolve report → WebSocket "admin:report_resolved"
+   */
+  resolveReport: async (reportId: number, result: string) => {
+    const response = await axiosClient.post(`/admin/reports/${reportId}/resolve`, { result });
+    return response.data;
+  },
+
+  /**
+   * POST /api/v1/admin/reports/{report_id}/reject
+   */
+  rejectReport: async (reportId: number, reason: string) => {
+    const response = await axiosClient.post(`/admin/reports/${reportId}/reject`, { reason });
+    return response.data;
+  },
+
+  /**
+   * POST /api/v1/admin/reports/bulk-resolve
+   */
+  bulkResolveReports: async (reportIds: number[], result: string) => {
+    const response = await axiosClient.post('/admin/reports/bulk-resolve', {
+      report_ids: reportIds,
+      result
+    });
+    return response.data;
+  },
+
+  // ==================== LEGACY ANALYTICS (giữ lại để tương thích) ====================
   
   // Analytics Overview
   getAnalyticsOverview: async (): Promise<any> => {
