@@ -10,23 +10,40 @@ import type {
 } from '@/types';
 
 export const videosApi = {
-  // Get video feed
+  // Get video feed (public videos)
+  // No authentication required
+  // If logged in: is_liked shows if user liked the video
+  // If not logged in: is_liked = null
   getVideos: async (params?: PaginationParams & { sort?: string; order?: 'asc' | 'desc' }): Promise<VideosResponse> => {
     try {
-      const response = await axiosClient.get<any>('/videos/', {
-        params: { ...params, sort: params?.sort || 'createdAt', order: params?.order || 'desc' },
+      // Backend uses skip/limit instead of page/pageSize
+      const skip = params?.page ? (params.page - 1) * (params.pageSize || 20) : 0;
+      const limit = params?.pageSize || 20;
+      
+      const response = await axiosClient.get<any>('/api/v1/videos/', {
+        params: { 
+          skip,
+          limit,
+        },
       });
 
       const data = response.data;
 
-      // If backend returned array directly, wrap into normalized response
+      // Normalize response
       if (Array.isArray(data)) {
         const page = params?.page || 1;
         const pageSize = params?.pageSize || data.length;
-        return { videos: data, total: data.length, page, pageSize, hasMore: false };
+        return { videos: data, total: data.length, page, pageSize, hasMore: data.length >= limit };
       }
 
-      return data as VideosResponse;
+      // If backend returns object with videos array
+      return {
+        videos: data.videos || data.items || data.data || [],
+        total: data.total || data.total_count || data.count || 0,
+        page: params?.page || 1,
+        pageSize: params?.pageSize || limit,
+        hasMore: data.has_more || false,
+      };
     } catch (error) {
       throw error;
     }
@@ -35,8 +52,12 @@ export const videosApi = {
   // Get following feed - videos from users you follow
   getFollowingFeed: async (params?: PaginationParams): Promise<VideosResponse> => {
     try {
-      const response = await axiosClient.get<any>('/videos/following/feed', {
-        params,
+      // Backend uses skip/limit
+      const skip = params?.page ? (params.page - 1) * (params.pageSize || 20) : 0;
+      const limit = params?.pageSize || 20;
+      
+      const response = await axiosClient.get<any>('/api/v1/videos/following/feed', {
+        params: { skip, limit },
       });
 
       const data = response.data;
@@ -46,14 +67,14 @@ export const videosApi = {
       if (Array.isArray(data)) {
         const page = params?.page || 1;
         const pageSize = params?.pageSize || data.length;
-        return { videos: data, total: data.length, page, pageSize, hasMore: false };
+        return { videos: data, total: data.length, page, pageSize, hasMore: data.length >= limit };
       }
 
       return {
         videos,
         total: data?.total ?? data?.total_count ?? data?.count ?? videos.length,
-        page: data?.page ?? params?.page ?? 1,
-        pageSize: data?.pageSize ?? data?.page_size ?? params?.pageSize ?? videos.length,
+        page: params?.page ?? 1,
+        pageSize: params?.pageSize ?? limit,
         hasMore: data?.hasMore ?? data?.has_more ?? false,
       };
     } catch (error) {
@@ -64,7 +85,7 @@ export const videosApi = {
   // Get video by ID
   getVideo: async (videoId: number): Promise<Video> => {
     try {
-      const response = await axiosClient.get<Video>(`/videos/${videoId}`);
+      const response = await axiosClient.get<Video>(`/api/v1/videos/${videoId}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -74,8 +95,12 @@ export const videosApi = {
   // Get videos by user
   getUserVideos: async (userId: number, params?: PaginationParams): Promise<VideosResponse> => {
     try {
-      const response = await axiosClient.get<any>(`/videos/user/${userId}`, {
-        params,
+      // Backend uses skip/limit
+      const skip = params?.page ? (params.page - 1) * (params.pageSize || 20) : 0;
+      const limit = params?.pageSize || 20;
+      
+      const response = await axiosClient.get<any>(`/api/v1/videos/user/${userId}`, {
+        params: { skip, limit },
       });
       
       console.log('📹 User videos response:', response.data);
@@ -87,11 +112,18 @@ export const videosApi = {
           total: response.data.length,
           page: params?.page || 1,
           pageSize: params?.pageSize || response.data.length,
-          hasMore: false,
+          hasMore: response.data.length >= limit,
         };
       }
       
-      return response.data;
+      const data = response.data;
+      return {
+        videos: data.videos || data.items || data.data || [],
+        total: data.total || data.total_count || data.count || 0,
+        page: params?.page || 1,
+        pageSize: params?.pageSize || limit,
+        hasMore: data.has_more || false,
+      };
     } catch (error) {
       throw error;
     }
@@ -104,7 +136,7 @@ export const videosApi = {
       const skip = params.page ? (params.page - 1) * (params.pageSize || 20) : 0;
       const limit = params.pageSize || 20;
       
-      const response = await axiosClient.get<any>('/videos/search', { 
+      const response = await axiosClient.get<any>('/api/v1/videos/search', { 
         params: {
           q: params.query,
           skip,
@@ -132,7 +164,7 @@ export const videosApi = {
       if (data.enableDubbing !== undefined) formData.append('enable_dubbing', data.enableDubbing.toString());
       if (data.speakerId) formData.append('speaker_id', data.speakerId);
 
-      const response = await axiosClient.post<Video>('/videos/', formData, {
+      const response = await axiosClient.post<Video>('/api/v1/videos/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return response.data;
@@ -144,7 +176,7 @@ export const videosApi = {
   // Update video
   updateVideo: async (videoId: number, data: VideoUpdateRequest): Promise<Video> => {
     try {
-      const response = await axiosClient.put<Video>(`/videos/${videoId}`, data);
+      const response = await axiosClient.put<Video>(`/api/v1/videos/${videoId}`, data);
       return response.data;
     } catch (error) {
       throw error;
@@ -154,7 +186,7 @@ export const videosApi = {
   // Delete video
   deleteVideo: async (videoId: number): Promise<void> => {
     try {
-      await axiosClient.delete(`/videos/${videoId}`);
+      await axiosClient.delete(`/api/v1/videos/${videoId}`);
     } catch (error) {
       throw error;
     }
@@ -163,7 +195,7 @@ export const videosApi = {
   // Get video transcript/subtitles
   getVideoTranscript: async (videoId: number): Promise<VideoTranscript> => {
     try {
-      const response = await axiosClient.get<VideoTranscript>(`/videos/${videoId}/transcript`);
+      const response = await axiosClient.get<VideoTranscript>(`/api/v1/videos/${videoId}/transcript`);
       return response.data;
     } catch (error) {
       throw error;
@@ -174,13 +206,12 @@ export const videosApi = {
   createDubbing: async (
     videoId: number,
     data: {
-      target_language: string;
-      speaker_id?: string;
+      speaker_id: string;
     }
-  ): Promise<{ message: string; dubbing_id?: number }> => {
+  ): Promise<{ video_id: number; audio_filename: string; message: string }> => {
     try {
-      const response = await axiosClient.post<{ message: string; dubbing_id?: number }>(
-        `/videos/${videoId}/dubbing`,
+      const response = await axiosClient.post<{ video_id: number; audio_filename: string; message: string }>(
+        `/api/v1/videos/${videoId}/dubbing`,
         data
       );
       return response.data;
@@ -193,13 +224,26 @@ export const videosApi = {
   transcribeVideo: async (
     videoId: number,
     data?: {
-      language?: string;
+      use_correction?: boolean;
+      translate_to_vietnamese?: boolean;
     }
   ): Promise<VideoTranscript> => {
     try {
+      // Backend expects form-data, not JSON
+      const formData = new URLSearchParams();
+      if (data?.use_correction !== undefined) {
+        formData.append('use_correction', data.use_correction.toString());
+      }
+      if (data?.translate_to_vietnamese !== undefined) {
+        formData.append('translate_to_vietnamese', data.translate_to_vietnamese.toString());
+      }
+
       const response = await axiosClient.post<VideoTranscript>(
-        `/videos/${videoId}/transcribe`,
-        data || {}
+        `/api/v1/videos/${videoId}/transcribe`,
+        formData,
+        {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        }
       );
       return response.data;
     } catch (error) {
@@ -211,14 +255,26 @@ export const videosApi = {
   generateSpeech: async (
     videoId: number,
     data?: {
-      speaker_id?: string;
-      language?: string;
+      use_vietnamese?: boolean;
+      alpha?: number;
     }
   ): Promise<{ message: string; audio_url?: string }> => {
     try {
+      // Backend expects form-data, not JSON
+      const formData = new URLSearchParams();
+      if (data?.use_vietnamese !== undefined) {
+        formData.append('use_vietnamese', data.use_vietnamese.toString());
+      }
+      if (data?.alpha !== undefined) {
+        formData.append('alpha', data.alpha.toString());
+      }
+
       const response = await axiosClient.post<{ message: string; audio_url?: string }>(
-        `/videos/${videoId}/text-to-speech`,
-        data || {}
+        `/api/v1/videos/${videoId}/text-to-speech`,
+        formData,
+        {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        }
       );
       return response.data;
     } catch (error) {
@@ -230,7 +286,7 @@ export const videosApi = {
   downloadTTSAudio: async (videoId: number): Promise<Blob> => {
     try {
       const response = await axiosClient.get(
-        `/videos/${videoId}/text-to-speech/download`,
+        `/api/v1/videos/${videoId}/text-to-speech/download`,
         {
           responseType: 'blob',
         }
@@ -245,7 +301,7 @@ export const videosApi = {
   getDubbedAudio: async (audioFilename: string): Promise<Blob> => {
     try {
       const response = await axiosClient.get(
-        `/videos/audio/${audioFilename}`,
+        `/api/v1/videos/audio/${audioFilename}`,
         {
           responseType: 'blob',
         }

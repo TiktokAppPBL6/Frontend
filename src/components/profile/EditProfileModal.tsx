@@ -49,7 +49,7 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
         setPasswordError('Vui lòng nhập mật khẩu để xác thực');
         throw new Error('Thiếu mật khẩu');
       }
-      const verify = await authApi.verifyPassword(currentPassword);
+      const verify = await authApi.verifyPassword(user.email, currentPassword);
       if (!verify.valid) {
         setPasswordError('Mật khẩu không chính xác');
         throw new Error('Invalid password');
@@ -57,7 +57,8 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
       setPasswordError(null);
 
       if (selectedAvatar) {
-        result = await usersApi.uploadAvatar(selectedAvatar);
+        const avatarUrl = await usersApi.uploadAvatar(selectedAvatar);
+        result = { ...user, avatarUrl };
       }
 
       const hasProfileChanges =

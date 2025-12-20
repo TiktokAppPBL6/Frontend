@@ -11,7 +11,7 @@ export function AdminReports() {
   const [selectedReport, setSelectedReport] = useState<any>(null);
   const [actionModal, setActionModal] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data: reports, isLoading } = useQuery({
     queryKey: ['admin-reports'],
     queryFn: () => reportsApi.getReports(),
   });
@@ -44,7 +44,7 @@ export function AdminReports() {
     });
   };
 
-  const filteredReports = data?.reports?.filter((report: any) => {
+  const filteredReports = reports?.filter((report: any) => {
     const matchesSearch = 
       report.reason?.toLowerCase().includes(search.toLowerCase()) ||
       report.description?.toLowerCase().includes(search.toLowerCase()) ||
@@ -112,24 +112,24 @@ export function AdminReports() {
         <div className="grid grid-cols-4 gap-4 mb-6">
           <div className="bg-[#1e1e1e] rounded-xl p-4">
             <p className="text-gray-400 text-sm mb-1">Tổng Reports</p>
-            <p className="text-2xl font-bold">{data?.total || 0}</p>
+            <p className="text-2xl font-bold">{reports?.length || 0}</p>
           </div>
           <div className="bg-[#1e1e1e] rounded-xl p-4">
             <p className="text-gray-400 text-sm mb-1">Chờ Xử Lý</p>
             <p className="text-2xl font-bold text-yellow-400">
-              {data?.reports?.filter((r: any) => r.status === 'pending').length || 0}
+              {reports?.filter((r: any) => r.status === 'pending').length || 0}
             </p>
           </div>
           <div className="bg-[#1e1e1e] rounded-xl p-4">
             <p className="text-gray-400 text-sm mb-1">Đã Approve</p>
             <p className="text-2xl font-bold text-green-400">
-              {data?.reports?.filter((r: any) => r.status === 'approved').length || 0}
+              {reports?.filter((r: any) => r.status === 'approved').length || 0}
             </p>
           </div>
           <div className="bg-[#1e1e1e] rounded-xl p-4">
             <p className="text-gray-400 text-sm mb-1">Đã Reject</p>
             <p className="text-2xl font-bold text-red-400">
-              {data?.reports?.filter((r: any) => r.status === 'rejected').length || 0}
+              {reports?.filter((r: any) => r.status === 'rejected').length || 0}
             </p>
           </div>
         </div>

@@ -4,7 +4,7 @@ export const socialApi = {
   // Like video
   likeVideo: async (videoId: ID): Promise<void> => {
     try {
-      await axiosClient.post(`/social/likes/${videoId}`);
+      await axiosClient.post(`/api/v1/social/likes/${videoId}`);
     } catch (error) {
       throw error;
     }
@@ -13,7 +13,7 @@ export const socialApi = {
   // Unlike video
   unlikeVideo: async (videoId: ID): Promise<void> => {
     try {
-      await axiosClient.delete(`/social/likes/${videoId}`);
+      await axiosClient.delete(`/api/v1/social/likes/${videoId}`);
     } catch (error) {
       throw error;
     }
@@ -23,7 +23,7 @@ export const socialApi = {
   getVideoLikes: async (videoId: ID): Promise<{ likes: User[]; total: number }> => {
     try {
       const response = await axiosClient.get<{ likes: User[]; total: number }>(
-        `/social/likes/video/${videoId}`
+        `/api/v1/social/likes/video/${videoId}`
       );
       return response.data;
     } catch (error) {
@@ -34,7 +34,7 @@ export const socialApi = {
   // Follow user
   followUser: async (userId: ID): Promise<void> => {
     try {
-      await axiosClient.post(`/social/follow/${userId}`);
+      await axiosClient.post(`/api/v1/social/follow/${userId}`);
     } catch (error) {
       throw error;
     }
@@ -43,7 +43,7 @@ export const socialApi = {
   // Unfollow user
   unfollowUser: async (userId: ID): Promise<void> => {
     try {
-      await axiosClient.delete(`/social/unfollow/${userId}`);
+      await axiosClient.delete(`/api/v1/social/unfollow/${userId}`);
     } catch (error) {
       throw error;
     }
@@ -52,7 +52,7 @@ export const socialApi = {
   // Get followers
   getFollowers: async (userId: ID): Promise<{ followers: User[]; total: number }> => {
     try {
-      const response = await axiosClient.get(`/social/followers/${userId}`);
+      const response = await axiosClient.get(`/api/v1/social/followers/${userId}`);
       const data = response.data;
       
       // Normalize various possible shapes
@@ -70,7 +70,7 @@ export const socialApi = {
   // Get following
   getFollowing: async (userId: ID): Promise<{ following: User[]; total: number }> => {
     try {
-      const response = await axiosClient.get(`/social/following/${userId}`);
+      const response = await axiosClient.get(`/api/v1/social/following/${userId}`);
       const data = response.data;
       
       // Normalize various possible shapes
@@ -88,7 +88,7 @@ export const socialApi = {
   // Bookmark video
   bookmarkVideo: async (videoId: ID): Promise<void> => {
     try {
-      await axiosClient.post(`/social/bookmarks/${videoId}`);
+      await axiosClient.post(`/api/v1/social/bookmarks/${videoId}`);
     } catch (error) {
       throw error;
     }
@@ -97,7 +97,7 @@ export const socialApi = {
   // Unbookmark video
   unbookmarkVideo: async (videoId: ID): Promise<void> => {
     try {
-      await axiosClient.delete(`/social/bookmarks/${videoId}`);
+      await axiosClient.delete(`/api/v1/social/bookmarks/${videoId}`);
     } catch (error) {
       throw error;
     }
@@ -107,7 +107,7 @@ export const socialApi = {
   getMyBookmarks: async (): Promise<{ videos: any[]; total: number }> => {
     try {
       const response = await axiosClient.get<{ videos: any[]; total: number }>(
-        '/social/bookmarks/my'
+        '/api/v1/social/bookmarks/my'
       );
       return response.data;
     } catch (error) {

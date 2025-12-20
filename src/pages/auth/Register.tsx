@@ -6,7 +6,6 @@ import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
 import { AuthDivider } from '@/components/auth/AuthDivider';
 import { RegisterFormFields } from '@/components/auth/RegisterFormFields';
 import { authApi } from '@/api/auth.api';
-import { useAuthStore } from '@/app/store/auth';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '@/config/api';
 
@@ -25,7 +24,6 @@ export function Register() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   const navigate = useNavigate();
-  const { login, loginWithToken } = useAuthStore();
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -82,32 +80,18 @@ export function Register() {
     
     setIsLoading(true);
     try {
-      const response = await authApi.register({
+      // OpenAPI spec: register returns User object only (no auto-login)
+      await authApi.register({
         email: formData.email,
         username: formData.username,
         password: formData.password,
         fullName: formData.fullName || undefined,
       });
       
-      // Auto login with the access_token from registration response
-      if (response.accessToken) {
-        if (response.user) {
-          // If we have user object, login directly
-          login(response.accessToken, response.user);
-        } else {
-          // If no user object, login with token and fetch user info
-          await loginWithToken(response.accessToken);
-        }
-        toast.success('Đăng ký thành công!');
-        setIsLoading(false);
-        // Use setTimeout to ensure state updates before navigation
-        setTimeout(() => navigate('/home'), 100);
-      } else {
-        // Fallback: if no token, redirect to login
-        toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
-        setIsLoading(false);
-        setTimeout(() => navigate('/auth/login'), 100);
-      }
+      // Registration successful - redirect to login
+      toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
+      setIsLoading(false);
+      setTimeout(() => navigate('/auth/login'), 100);
     } catch (error: any) {
       setIsLoading(false);
       const errorMessage = error?.response?.data?.message || 

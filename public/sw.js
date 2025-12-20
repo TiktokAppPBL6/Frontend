@@ -11,7 +11,12 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      // Add error handling for cache
+      return cache.addAll(STATIC_ASSETS).catch((error) => {
+        console.error('Failed to cache:', error);
+        // Continue installation even if some assets fail
+        return Promise.resolve();
+      });
     })
   );
   self.skipWaiting();
@@ -38,6 +43,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((response) => {
       // Return cached response if found
@@ -48,22 +58,34 @@ self.addEventListener('fetch', (event) => {
       // Clone the request
       const fetchRequest = event.request.clone();
 
-      return fetch(fetchRequest).then((response) => {
-        // Check if valid response
-        if (!response || response.status !== 200 || response.type !== 'basic') {
+      return fetch(fetchRequest)
+        .then((response) => {
+          // Check if valid response
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+
+          // Clone the response
+          const responseToCache = response.clone();
+
+          // Cache the new response
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+
           return response;
-        }
-
-        // Clone the response
-        const responseToCache = response.clone();
-
-        // Cache the new response
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+        })
+        .catch((error) => {
+          console.error('Fetch failed:', error);
+          // Return offline page or fallback
+          return new Response('Offline - Please check your connection', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: new Headers({
+              'Content-Type': 'text/plain',
+            }),
+          });
         });
-
-        return response;
-      });
     })
   );
 });

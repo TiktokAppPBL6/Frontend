@@ -10,7 +10,7 @@ export const authApi = {
       formData.append('username', data.email); // OAuth2 uses 'username' field
       formData.append('password', data.password);
       
-      const response = await axiosClient.post<any>('/auth/login', formData, {
+      const response = await axiosClient.post<any>('/api/v1/auth/login', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
           ...(data._skipRedirect ? { 'X-Skip-Auth-Redirect': '1' } : {}),
@@ -36,21 +36,18 @@ export const authApi = {
   },
 
   // Register
-  register: async (data: RegisterRequest): Promise<AuthResponse> => {
+  register: async (data: RegisterRequest): Promise<any> => {
     try {
-      const response = await axiosClient.post<any>('/auth/register', data);
+      // OpenAPI spec: POST /api/v1/auth/register returns User object (201), not {access_token, user}
+      const response = await axiosClient.post<any>('/api/v1/auth/register', data);
       
-      // Normalize response - handle both snake_case and camelCase
-      const responseData = response.data;
-      const accessToken = responseData.access_token || responseData.accessToken;
-      const user = responseData.user;
+      // Response is the User object directly
+      const user = response.data;
       
-      console.log('Register response:', { accessToken, user });
+      console.log('Register response (User object):', user);
       
-      return {
-        accessToken,
-        user,
-      };
+      // Return user object as is (registration does NOT auto-login)
+      return { user };
     } catch (error) {
       throw error;
     }
@@ -66,7 +63,7 @@ export const authApi = {
   testToken: async (): Promise<{ valid: boolean; user?: any }> => {
     try {
       const response = await axiosClient.get<{ valid?: boolean; success?: boolean; user?: any }>(
-        '/auth/test-token'
+        '/api/v1/auth/test-token'
       );
       return {
         valid: response.data?.valid ?? response.data?.success ?? true,
@@ -79,13 +76,13 @@ export const authApi = {
   
   // Google login - redirect to Google OAuth
   googleLogin: () => {
-    window.location.href = `${axiosClient.defaults.baseURL}/auth/google/login`;
+    window.location.href = `${axiosClient.defaults.baseURL}/api/v1/auth/google/login`;
   },
   
   // Google callback - handle redirect from Google (usually handled by backend)
   googleCallback: async (code: string, state?: string): Promise<AuthResponse> => {
     try {
-      const response = await axiosClient.get<any>('/auth/google/callback', {
+      const response = await axiosClient.get<any>('/api/v1/auth/google/callback', {
         params: { code, state },
       });
       
@@ -102,36 +99,30 @@ export const authApi = {
     }
   },
   
-  // Verify current password without changing session
-  verifyPassword: async (password: string, email?: string): Promise<{ valid: boolean }> => {
+  // Verify password (POST /api/v1/auth/verify-password)
+  // OpenAPI spec: Request body = {email: string, password: string}
+  // Response: {valid: bool, message: string}
+  verifyPassword: async (email: string, password: string): Promise<{ valid: boolean; message?: string }> => {
     try {
-      // Get email from localStorage user if not provided
-      let userEmail = email;
-      if (!userEmail) {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-          const user = JSON.parse(userStr);
-          userEmail = user.email;
-        }
-      }
-      
-      if (!userEmail) {
-        throw new Error('Email is required for password verification');
-      }
-      
-      const response = await axiosClient.post<{ valid?: boolean; success?: boolean }>(
-        '/auth/verify-password',
-        { email: userEmail, password },
+      const response = await axiosClient.post<{ valid: boolean; message: string }>(
+        '/api/v1/auth/verify-password',
+        { email, password },
         {
           headers: { 'X-Skip-Auth-Redirect': '1' },
         }
       );
-      const valid = response.data?.valid ?? response.data?.success ?? true;
-      return { valid };
+      return {
+        valid: response.data?.valid ?? false,
+        message: response.data?.message,
+      };
     } catch (error: any) {
+      // 401: Incorrect password, 403: Blocked, 404: Email not found
       const status = error?.response?.status;
-      if (status === 401 || status === 400) {
-        return { valid: false };
+      if (status === 401 || status === 403 || status === 404) {
+        return { 
+          valid: false,
+          message: error?.response?.data?.message || 'Password verification failed'
+        };
       }
       throw error;
     }
@@ -140,7 +131,7 @@ export const authApi = {
   // Change password
   changePassword: async (data: { currentPassword: string; newPassword: string }): Promise<void> => {
     try {
-      await axiosClient.post('/auth/change-password', {
+      await axiosClient.post('/api/v1/auth/change-password', {
         current_password: data.currentPassword,
         new_password: data.newPassword,
       });
@@ -152,7 +143,7 @@ export const authApi = {
   // Google Login with credential
   googleLoginWithCredential: async (credential: string): Promise<AuthResponse> => {
     try {
-      const response = await axiosClient.post<any>('/auth/google/login', {
+      const response = await axiosClient.post<any>('/api/v1/auth/google/login', {
         credential,
       });
       
@@ -176,7 +167,7 @@ export const authApi = {
   googleCallbackHandler: async (code: string): Promise<AuthResponse> => {
     try {
       // Call backend callback endpoint directly with code
-      const response = await axiosClient.get<any>(`/auth/google/callback`, {
+      const response = await axiosClient.get<any>(`/api/v1/auth/google/callback`, {
         params: { code }
       });
       

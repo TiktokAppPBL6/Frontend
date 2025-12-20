@@ -14,7 +14,7 @@ export const notificationsApi = {
   // Get notifications
   getNotifications: async (params?: { skip?: number; limit?: number }): Promise<Notification[]> => {
     try {
-      const response = await axiosClient.get<Notification[]>('/notifications/', {
+      const response = await axiosClient.get<Notification[]>('/api/v1/notifications/', {
         params: {
           skip: params?.skip || 0,
           limit: params?.limit || 50,
@@ -29,7 +29,7 @@ export const notificationsApi = {
   // Get unseen count
   getUnseenCount: async (): Promise<number> => {
     try {
-      const response = await axiosClient.get<number>('/notifications/unseen/count');
+      const response = await axiosClient.get<number>('/api/v1/notifications/unseen/count');
       return response.data;
     } catch (error) {
       throw error;
@@ -39,7 +39,7 @@ export const notificationsApi = {
   // Mark notifications as seen
   markAsSeen: async (notificationIds: number[]): Promise<string> => {
     try {
-      const response = await axiosClient.post<string>('/notifications/mark-seen', {
+      const response = await axiosClient.post<string>('/api/v1/notifications/mark-seen', {
         notification_ids: notificationIds,
       });
       return response.data;
@@ -51,7 +51,7 @@ export const notificationsApi = {
   // Mark all as seen
   markAllAsSeen: async (): Promise<string> => {
     try {
-      const response = await axiosClient.post<string>('/notifications/mark-all-seen');
+      const response = await axiosClient.post<string>('/api/v1/notifications/mark-all-seen');
       return response.data;
     } catch (error) {
       throw error;
@@ -61,7 +61,7 @@ export const notificationsApi = {
   // Delete notification
   deleteNotification: async (notificationId: ID): Promise<void> => {
     try {
-      await axiosClient.delete(`/notifications/${notificationId}`);
+      await axiosClient.delete(`/api/v1/notifications/${notificationId}`);
     } catch (error) {
       throw error;
     }
