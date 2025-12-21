@@ -1,4 +1,4 @@
-import { useRef, useState, memo } from 'react';
+import { useRef, useState, memo, useEffect } from 'react';
 import { Video } from '@/types';
 import { VideoActions } from './VideoActions';
 import { VideoProgressBar } from './VideoProgressBar';
@@ -72,15 +72,30 @@ function UniversalVideoPlayerComponent({
   const isFeedMode = mode === 'feed';
   const subtitleLanguage = isFeedMode ? internalSubtitleLanguage : (externalSubtitleLanguage || 'off');
   
-  // Video controls
-  const { isMuted, isDubbing, toggleMute, toggleDubbing, handleVideoClick } = useVideoControls({
+  // Video controls - uses internal state but can be controlled externally
+  const { isMuted, isDubbing, toggleMute, toggleDubbing, handleVideoClick, setIsMuted, setIsDubbing } = useVideoControls({
     videoRef,
     audioRef,
   });
   
-  // Use external states for detail mode
-  const effectiveIsMuted = isFeedMode ? isMuted : (externalIsMuted ?? false);
-  const effectiveIsDubbing = isFeedMode ? isDubbing : (externalIsDubbing ?? false);
+  // Sync external state to internal state for detail mode
+  // IMPORTANT: Only update internal state directly, don't call toggle functions
+  // Toggle functions are called from handleMuteToggle/handleDubbingToggle
+  useEffect(() => {
+    if (!isFeedMode && externalIsMuted !== undefined && externalIsMuted !== isMuted) {
+      setIsMuted(externalIsMuted);
+    }
+  }, [isFeedMode, externalIsMuted, isMuted, setIsMuted]);
+  
+  useEffect(() => {
+    if (!isFeedMode && externalIsDubbing !== undefined && externalIsDubbing !== isDubbing) {
+      setIsDubbing(externalIsDubbing);
+    }
+  }, [isFeedMode, externalIsDubbing, isDubbing, setIsDubbing]);
+  
+  // Use internal states for both modes (synced from external in detail mode)
+  const effectiveIsMuted = isMuted;
+  const effectiveIsDubbing = isDubbing;
 
   // Progress bar
   const {
@@ -129,18 +144,22 @@ function UniversalVideoPlayerComponent({
 
   // Handle control changes
   const handleMuteToggle = () => {
-    if (isFeedMode) {
-      toggleMute();
-    } else {
-      onMuteChange?.(!effectiveIsMuted);
+    // Always execute the actual logic (toggleMute handles sync immediately)
+    toggleMute();
+    
+    // Notify parent about the NEW state (after toggle)
+    if (!isFeedMode) {
+      onMuteChange?.(!isMuted); // Will be the new state after toggle
     }
   };
 
   const handleDubbingToggle = () => {
-    if (isFeedMode) {
-      toggleDubbing();
-    } else {
-      onDubbingChange?.(!effectiveIsDubbing);
+    // Always execute the actual logic (toggleDubbing handles audio sync)
+    toggleDubbing();
+    
+    // Notify parent about the NEW state (after toggle)
+    if (!isFeedMode) {
+      onDubbingChange?.(!isDubbing); // Will be the new state after toggle
     }
   };
 

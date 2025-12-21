@@ -33,13 +33,13 @@ export function useVideoProgress({
   // Update progress from video/audio time
   useEffect(() => {
     const video = videoRef.current;
-    const audio = audioRef.current;
     if (!video) return;
 
     const updateProgress = () => {
       // Wait until video has enough data to get duration
       if (video.readyState < 1) {
         setProgress(0);
+        currentTimeRef.current = 0;
         return;
       }
 
@@ -52,13 +52,14 @@ export function useVideoProgress({
       }
 
       if (duration && duration > 0) {
-        const currentTime = isDubbing && audio && audio.readyState >= 1 
-          ? Math.min(audio.currentTime, video.currentTime + 0.5)
-          : video.currentTime;
+        // Always use video.currentTime as source of truth for subtitle sync
+        // Audio time is only used as fallback reference when debugging sync issues
+        const currentTime = video.currentTime;
         
         const percent = (currentTime / duration) * 100;
         const clamped = Math.max(0, Math.min(100, percent));
         setProgress(clamped);
+        // CRITICAL: Always update currentTimeRef for subtitle sync
         currentTimeRef.current = currentTime;
       } else {
         setProgress(0);
@@ -68,10 +69,13 @@ export function useVideoProgress({
 
     video.addEventListener('timeupdate', updateProgress);
     video.addEventListener('loadedmetadata', updateProgress);
+    // Also update on seeked to ensure immediate subtitle update
+    video.addEventListener('seeked', updateProgress);
 
     return () => {
       video.removeEventListener('timeupdate', updateProgress);
       video.removeEventListener('loadedmetadata', updateProgress);
+      video.removeEventListener('seeked', updateProgress);
     };
   }, [videoRef, audioRef, currentTimeRef, isDubbing]);
 

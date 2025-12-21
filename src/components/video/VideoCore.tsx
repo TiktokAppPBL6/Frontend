@@ -1,4 +1,4 @@
-import { forwardRef, RefObject, useEffect } from 'react';
+import { forwardRef, RefObject, useMemo } from 'react';
 import { Video } from '@/types';
 import { getMediaUrl } from '@/lib/utils';
 
@@ -18,26 +18,20 @@ interface VideoCoreProps {
  * No business logic - just rendering and basic event forwarding
  */
 export const VideoCore = forwardRef<HTMLDivElement, VideoCoreProps>(
-  ({ video, videoRef, audioRef, isMuted, isDubbing, className, onVideoClick }, ref) => {
-    // Sync muted state with video element
-    useEffect(() => {
-      if (videoRef.current) {
-        videoRef.current.muted = isDubbing ? true : isMuted;
-      }
-    }, [videoRef, isMuted, isDubbing]);
+  ({ video, videoRef, audioRef, isDubbing, className, onVideoClick }, ref) => {
+    // NOTE: Muted state is now managed directly in useVideoControls
+    // Removed useEffect syncs here to avoid conflicts and ensure immediate response
+    // The hooks (useVideoControls, useVideoSync) handle all audio/video state management
 
-    // Sync muted state with audio element
-    useEffect(() => {
-      if (audioRef.current && isDubbing) {
-        audioRef.current.muted = isMuted;
-      }
-    }, [audioRef, isMuted, isDubbing]);
-
-    // Extract URLs from different API response formats
-    const v: any = video;
-    const videoUrl = v.hlsUrl || v.hls_url || v.url || v.videoUrl || v.video_url || '';
-    const audioViUrl = v.audioVi || v.audio_vi || '';
-    const thumbnailUrl = v.thumbUrl || v.thumb_url || v.thumbnailUrl || v.thumbnail_url || '';
+    // Extract URLs from different API response formats - memoize to prevent unnecessary re-renders
+    const { videoUrl, audioViUrl, thumbnailUrl } = useMemo(() => {
+      const v: any = video;
+      return {
+        videoUrl: v.hlsUrl || v.hls_url || v.url || v.videoUrl || v.video_url || '',
+        audioViUrl: v.audioVi || v.audio_vi || '',
+        thumbnailUrl: v.thumbUrl || v.thumb_url || v.thumbnailUrl || v.thumbnail_url || '',
+      };
+    }, [video]);
 
     return (
       <div
@@ -53,19 +47,19 @@ export const VideoCore = forwardRef<HTMLDivElement, VideoCoreProps>(
           className="max-w-full max-h-full w-auto h-auto"
           style={{ objectFit: 'contain' }}
           playsInline
-          preload="metadata"
+          preload="auto"
           crossOrigin="anonymous"
           onError={() => {
             console.error('Video load error:', videoUrl);
           }}
         />
 
-        {/* Audio Element for Dubbing */}
+        {/* Audio Element for Dubbing - Only preload if dubbing is enabled or likely to be used */}
         {audioViUrl && (
           <audio
             ref={audioRef}
             src={getMediaUrl(audioViUrl)}
-            preload="metadata"
+            preload={isDubbing ? "auto" : "none"}
             crossOrigin="anonymous"
             onError={() => {
               // Gracefully handle CORS errors - app will continue without dubbing

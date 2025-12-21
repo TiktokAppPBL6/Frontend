@@ -8,31 +8,11 @@ interface UseVideoSyncProps {
 
 /**
  * Hook to sync audio with video when dubbing is enabled
- * Handles play, pause, seeking events and dubbing state changes
+ * Handles play, pause, seeking events
+ * NOTE: Initial sync when toggling dubbing is handled by toggleDubbing() in useVideoControls
  */
 export function useVideoSync({ videoRef, audioRef, isDubbing }: UseVideoSyncProps) {
-  // Sync audio time when dubbing state changes
-  useEffect(() => {
-    const video = videoRef.current;
-    const audio = audioRef.current;
-    if (!video || !audio || !isDubbing) return;
-
-    // Immediately sync audio to video position when dubbing is enabled
-    const syncAudioPosition = () => {
-      if (audio.readyState >= 2) {
-        audio.currentTime = video.currentTime;
-      } else {
-        const syncWhenReady = () => {
-          audio.currentTime = video.currentTime;
-        };
-        audio.addEventListener('loadedmetadata', syncWhenReady, { once: true });
-        audio.addEventListener('canplay', syncWhenReady, { once: true });
-      }
-    };
-
-    syncAudioPosition();
-  }, [videoRef, audioRef, isDubbing]);
-
+  // Sync audio with video during playback events
   useEffect(() => {
     const video = videoRef.current;
     const audio = audioRef.current;
@@ -63,19 +43,23 @@ export function useVideoSync({ videoRef, audioRef, isDubbing }: UseVideoSyncProp
 
     const handlePlay = () => {
       if (isDubbing && audio && audio.src && !audio.error) {
-        // Sync time before playing
-        if (audio.readyState >= 2) {
-          audio.currentTime = video.currentTime;
-          audio.play().catch(() => {});
-        } else {
-          const playWhenReady = () => {
-            if (!audio.error) {
-              audio.currentTime = video.currentTime;
-              audio.play().catch(() => {});
-            }
-          };
-          audio.addEventListener('loadedmetadata', playWhenReady, { once: true });
-          audio.addEventListener('canplay', playWhenReady, { once: true });
+        // Only sync and play audio if audio is currently paused
+        // This avoids conflict when toggleDubbing already handled the play
+        if (audio.paused) {
+          // Sync time before playing
+          if (audio.readyState >= 2) {
+            audio.currentTime = video.currentTime;
+            audio.play().catch(() => {});
+          } else {
+            const playWhenReady = () => {
+              if (!audio.error) {
+                audio.currentTime = video.currentTime;
+                audio.play().catch(() => {});
+              }
+            };
+            audio.addEventListener('loadedmetadata', playWhenReady, { once: true });
+            audio.addEventListener('canplay', playWhenReady, { once: true });
+          }
         }
       }
     };

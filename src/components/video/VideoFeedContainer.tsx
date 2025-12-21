@@ -21,7 +21,7 @@ export function VideoFeedContainer() {
     queryFn: ({ pageParam = 1 }) => 
       videosApi.getVideos({ 
         page: pageParam, 
-        pageSize: 10, 
+        pageSize: 50, 
         sort: 'createdAt', 
         order: 'desc' 
       }),
