@@ -86,7 +86,7 @@ export function ConversationsList({
                   <span className="italic text-[#FE2C55]">đang gõ...</span>
                 ) : (
                   <>
-                    {conv.lastMessage?.senderId === currentUserId && 'Bạn: '}
+                    {conv.lastMessage && conv.lastMessage.senderId === currentUserId && 'Bạn: '}
                     {conv.lastMessage?.content || 'Chưa có tin nhắn'}
                   </>
                 )}

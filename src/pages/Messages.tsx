@@ -66,14 +66,14 @@ export function Messages() {
         username: conv.username,
         avatarUrl: conv.avatarUrl,
         fullName: conv.fullName,
-        lastMessage: {
+        lastMessage: conv.lastMessage ? {
           id: conv.lastMessage.id,
           senderId: conv.lastMessage.senderId,
           receiverId: conv.lastMessage.receiverId,
           content: conv.lastMessage.content,
           status: (conv.lastMessage.seen ? 'read' : 'delivered') as 'delivered' | 'read' | 'deleted',
           createdAt: conv.lastMessage.createdAt,
-        },
+        } : undefined,
         unreadCount: conv.unreadCount,
       }));
       setConversations(formattedConversations);

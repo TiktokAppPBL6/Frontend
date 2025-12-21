@@ -190,7 +190,7 @@ export const adminApi = {
    * POST /api/v1/admin/users/{user_id}/unban
    */
   unbanUser: async (userId: number) => {
-    const response = await axiosClient.post(`/admin/users/${userId}/unban`);
+    const response = await axiosClient.post(`/admin/users/${userId}/unban`, {});
     return response.data;
   },
 
@@ -219,7 +219,7 @@ export const adminApi = {
    * Verify user (blue checkmark)
    */
   verifyUser: async (userId: number) => {
-    const response = await axiosClient.post(`/admin/users/${userId}/verify`);
+    const response = await axiosClient.post(`/admin/users/${userId}/verify`, {});
     return response.data;
   },
 

@@ -7,7 +7,7 @@
  */
 
 // Use environment variable with fallback to localhost
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://toptop-backend-api.azurewebsites.net/';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://toptop-backend-api.azurewebsites.net';
 export const API_VERSION = 'v1';
 
 // Full API URL (same as base URL since endpoints include /api/v1)

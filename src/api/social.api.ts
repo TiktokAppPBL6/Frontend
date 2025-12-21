@@ -4,7 +4,7 @@ export const socialApi = {
   // Like video
   likeVideo: async (videoId: ID): Promise<void> => {
     try {
-      await axiosClient.post(`/api/v1/social/likes/${videoId}`);
+      await axiosClient.post(`/api/v1/social/likes/${videoId}`, {});
     } catch (error) {
       throw error;
     }
@@ -34,7 +34,7 @@ export const socialApi = {
   // Follow user
   followUser: async (userId: ID): Promise<void> => {
     try {
-      await axiosClient.post(`/api/v1/social/follow/${userId}`);
+      await axiosClient.post(`/api/v1/social/follow/${userId}`, {});
     } catch (error) {
       throw error;
     }
@@ -88,7 +88,7 @@ export const socialApi = {
   // Bookmark video
   bookmarkVideo: async (videoId: ID): Promise<void> => {
     try {
-      await axiosClient.post(`/api/v1/social/bookmarks/${videoId}`);
+      await axiosClient.post(`/api/v1/social/bookmarks/${videoId}`, {});
     } catch (error) {
       throw error;
     }
