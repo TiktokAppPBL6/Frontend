@@ -29,7 +29,6 @@ export function Messages() {
   // Get data from Zustand store (real-time via WebSocket)
   const conversations = useMessageStore((state) => state.conversations);
   const messages = useMessageStore((state) => state.messages);
-  const activeConversation = useMessageStore((state) => state.activeConversation);
   const setActiveConversation = useMessageStore((state) => state.setActiveConversation);
   const setMessages = useMessageStore((state) => state.setMessages);
   const setConversations = useMessageStore((state) => state.setConversations);
@@ -72,8 +71,8 @@ export function Messages() {
           senderId: conv.lastMessage.senderId,
           receiverId: conv.lastMessage.receiverId,
           content: conv.lastMessage.content,
+          status: (conv.lastMessage.seen ? 'read' : 'delivered') as 'delivered' | 'read' | 'deleted',
           createdAt: conv.lastMessage.createdAt,
-          seen: conv.lastMessage.seen,
         },
         unreadCount: conv.unreadCount,
       }));

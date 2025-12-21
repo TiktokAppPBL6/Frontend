@@ -27,5 +27,5 @@ export function useWebSocketEvent(
  * Get WebSocket connection status
  */
 export function useWebSocketStatus() {
-  return websocketService.getConnectionState();
+  return websocketService.getState();
 }

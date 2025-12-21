@@ -2,7 +2,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import type { Message } from '@/api/messages.api';
+import type { Message } from '@/app/store/message';
 
 interface MessagesListProps {
   messages: Message[];

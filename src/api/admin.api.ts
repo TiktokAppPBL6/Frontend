@@ -28,7 +28,11 @@ export interface AdminStats {
     rejected: number;
     resolved_today: number;
   };
-  engagement: {
+  engagement?: {
+    rate: number;
+    views_today: number;
+    likes_total: number;
+    comments_total: number;
     total_likes: number;
     total_comments: number;
     total_follows: number;
@@ -537,84 +541,8 @@ export const adminApi = {
   },
 
   // ===== Legacy/Helper Methods =====
-  
-  // List Users (uses regular users endpoint for admin purposes)
-  // Note: Backend does NOT have /api/v1/admin/users/list endpoint
-  listUsers: async (params?: {
-    skip?: number;
-    limit?: number;
-    status?: string;
-  }): Promise<{ users: any[]; total: number }> => {
-    try {
-      const response = await axiosClient.get<any>(
-        '/api/v1/users/',
-        { params }
-      );
-      
-      console.log('👥 Admin list users response:', response.data);
-      console.log('👥 Admin list users headers:', response.headers);
-      
-      // Get total count from header (if available)
-      const totalCount = response.headers['x-total-count'];
-      
-      // Normalize response
-      const data = response.data;
-      
-      if (Array.isArray(data)) {
-        return {
-          users: data,
-          total: totalCount ? parseInt(totalCount, 10) : data.length,
-        };
-      }
-      
-      // If backend returns object with users array
-      return {
-        users: data.users || data.items || data.data || [],
-        total: totalCount ? parseInt(totalCount, 10) : (data.total || data.total_count || data.count || 0),
-      };
-    } catch (error) {
-      throw error;
-    }
-  },
 
-  // List Videos (uses regular videos endpoint for admin purposes)
-  // Note: Backend does NOT have /api/v1/admin/videos/list endpoint
-  listVideos: async (params?: {
-    skip?: number;
-    limit?: number;
-    status?: string;
-  }): Promise<{ videos: any[]; total: number }> => {
-    try {
-      const response = await axiosClient.get<any>(
-        '/api/v1/videos/',
-        { params }
-      );
-      
-      console.log('📹 Admin list videos response:', response.data);
-      console.log('📹 Admin list videos headers:', response.headers);
-      
-      // Get total count from header (if available)
-      const totalCount = response.headers['x-total-count'];
-      
-      // Normalize response
-      const data = response.data;
-      
-      if (Array.isArray(data)) {
-        return {
-          videos: data,
-          total: totalCount ? parseInt(totalCount, 10) : data.length,
-        };
-      }
-      
-      // If backend returns object with videos array
-      return {
-        videos: data.videos || data.items || data.data || [],
-        total: totalCount ? parseInt(totalCount, 10) : (data.total || data.total_count || data.count || 0),
-      };
-    } catch (error) {
-      throw error;
-    }
-  },
+
 
   // User Action (single user) - uses bulk action with single ID
   userAction: async (userId: ID, action: { action: string; reason?: string }): Promise<{ message: string }> => {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, LogOut, Shield } from 'lucide-react';
+import { Search, Menu, X, LogOut } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/common/Avatar';
@@ -68,18 +68,6 @@ export function Topbar() {
         <div className="flex items-center gap-4">
           {/* Notification Center */}
           <NotificationCenter />
-          
-          {/* Admin Panel Button - Always visible if user is admin */}
-          {user?.role === 'admin' && (
-            <Link
-              to="/admin"
-              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 border border-purple-500/30 hover:border-purple-400/50 rounded-lg transition-all duration-300 hover:scale-105"
-              title="Admin Panel"
-            >
-              <Shield className="h-4 w-4 text-purple-400" />
-              <span className="hidden sm:inline text-sm font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">Admin</span>
-            </Link>
-          )}
           
           <Link to={`/user/${user?.id}`}>
             <Avatar src={user?.avatarUrl} alt={user?.username} size="md" />
