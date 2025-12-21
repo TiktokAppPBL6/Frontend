@@ -56,19 +56,25 @@ export function useVideoControls({
     const videoEl = videoRef.current;
     const audioEl = audioRef.current;
     
-    if (!videoEl || !audioEl) return;
+    if (!videoEl || !audioEl) {
+      return;
+    }
     
     const wasPlaying = !videoEl.paused;
-    // Use video currentTime as source of truth
-    const currentTime = videoEl.currentTime;
+    
+    // CRITICAL: Pause video FIRST to capture exact time
+    // This prevents video from advancing while we sync audio
+    if (wasPlaying) {
+      videoEl.pause();
+    }
+    
+    // Capture time AFTER pausing to get exact sync point
+    const targetTime = videoEl.currentTime;
+    
+    console.log('🎵 Toggle dubbing:', { newIsDubbing, targetTime, wasPlaying, audioReadyState: audioEl.readyState });
     
     if (newIsDubbing) {
       // BẬT dubbing: chuyển sang dùng audio dubbing
-      // CRITICAL: Đảm bảo không phát cả 2 audio cùng lúc
-      // - Mute video TRƯỚC (tắt audio gốc)
-      // - Sync thời gian audio = video (GIỮ ĐÚNG THỜI ĐIỂM)
-      // - Nếu video đang play → play audio dubbing
-      // - Apply mute state theo isMuted
       
       // Step 1: Mute video audio IMMEDIATELY
       videoEl.muted = true;
@@ -76,60 +82,66 @@ export function useVideoControls({
       // Step 2: Apply mute state to audio dubbing FIRST
       audioEl.muted = isMuted;
       
-      // Step 3: Sync audio time to video time (KHÔNG RESTART TỪ ĐẦU)
-      // IMPORTANT: Must sync BEFORE playing to avoid restart
-      // Capture currentTime NOW before any async operations
-      const targetTime = currentTime;
-      
-      const syncAndPlay = () => {
+      // Step 3: Sync audio to exact video position
+      const syncAndResume = () => {
         if (!audioEl.error && audioEl.src) {
-          // Use captured time, not current video time (which might have changed)
-          audioEl.currentTime = targetTime;
-          if (wasPlaying) {
-            // Use requestAnimationFrame to ensure currentTime is applied
-            requestAnimationFrame(() => {
-              // Check if still should play (user might have paused in the meantime)
-              if (!videoEl.paused && !audioEl.error) {
-                audioEl.play().catch(() => {
-                  // Silently handle play errors (autoplay policy, etc.)
-                });
-              }
-            });
+          console.log('🎵 Syncing audio to:', targetTime, 'current:', audioEl.currentTime);
+          
+          // Skip seek if already at target (within 50ms)
+          if (Math.abs(audioEl.currentTime - targetTime) < 0.05) {
+            console.log('🎵 Already at target, resuming...');
+            if (wasPlaying) {
+              Promise.all([
+                videoEl.play().catch(() => {}),
+                audioEl.play().catch(() => {})
+              ]);
+            }
+            return;
           }
+          
+          // Seek audio, wait for completion, then resume both
+          const handleAudioSeeked = () => {
+            console.log('🎵 Audio seeked to:', audioEl.currentTime);
+            if (wasPlaying) {
+              // Resume both video and audio together
+              Promise.all([
+                videoEl.play().catch(() => {}),
+                audioEl.play().catch(() => {})
+              ]);
+            }
+          };
+          
+          audioEl.addEventListener('seeked', handleAudioSeeked, { once: true });
+          audioEl.currentTime = targetTime;
         }
       };
       
-      // Check if audio needs to be loaded first (preload="none")
-      if (audioEl.readyState === 0 && audioEl.src) {
-        // Audio not loaded yet - trigger load first
-        // Use only 'canplay' event to ensure we can set currentTime reliably
+      // Check if audio has enough data to seek
+      if (audioEl.readyState >= 2) {
+        syncAndResume();
+      } else {
         const handleCanPlay = () => {
-          syncAndPlay();
+          syncAndResume();
         };
         audioEl.addEventListener('canplay', handleCanPlay, { once: true });
-        audioEl.load();
-      } else if (audioEl.readyState >= 2) {
-        syncAndPlay();
-      } else {
-        // Loading in progress - wait for canplay
-        audioEl.addEventListener('canplay', syncAndPlay, { once: true });
+        if (audioEl.readyState === 0 && audioEl.src) {
+          audioEl.load();
+        }
       }
     } else {
       // TẮT dubbing: chuyển về dùng audio gốc video
-      // CRITICAL: Đảm bảo không phát cả 2 audio cùng lúc
-      // - Pause và mute audio dubbing TRƯỚC
-      // - Sync audio time cho lần sau (GIỮ VỊ TRÍ)
-      // - Unmute video để dùng audio gốc
       
       // Step 1: Stop audio dubbing IMMEDIATELY
       audioEl.pause();
       audioEl.muted = true;
       
-      // Step 2: Sync audio time for next toggle (GIỮ VỊ TRÍ)
-      audioEl.currentTime = currentTime;
-      
-      // Step 3: Unmute video to use original audio
+      // Step 2: Unmute video to use original audio
       videoEl.muted = isMuted;
+      
+      // Step 3: Resume video if it was playing
+      if (wasPlaying) {
+        videoEl.play().catch(() => {});
+      }
     }
   }, [videoRef, audioRef, isDubbing, isMuted]);
 

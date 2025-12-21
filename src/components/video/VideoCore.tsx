@@ -7,7 +7,6 @@ interface VideoCoreProps {
   videoRef: RefObject<HTMLVideoElement>;
   audioRef: RefObject<HTMLAudioElement>;
   isMuted: boolean;
-  isDubbing: boolean;
   className?: string;
   onVideoClick?: () => void;
 }
@@ -18,7 +17,7 @@ interface VideoCoreProps {
  * No business logic - just rendering and basic event forwarding
  */
 export const VideoCore = forwardRef<HTMLDivElement, VideoCoreProps>(
-  ({ video, videoRef, audioRef, isDubbing, className, onVideoClick }, ref) => {
+  ({ video, videoRef, audioRef, className, onVideoClick }, ref) => {
     // NOTE: Muted state is now managed directly in useVideoControls
     // Removed useEffect syncs here to avoid conflicts and ensure immediate response
     // The hooks (useVideoControls, useVideoSync) handle all audio/video state management
@@ -54,12 +53,12 @@ export const VideoCore = forwardRef<HTMLDivElement, VideoCoreProps>(
           }}
         />
 
-        {/* Audio Element for Dubbing - Only preload if dubbing is enabled or likely to be used */}
+        {/* Audio Element for Dubbing - Preload metadata to have it ready */}
         {audioViUrl && (
           <audio
             ref={audioRef}
             src={getMediaUrl(audioViUrl)}
-            preload={isDubbing ? "auto" : "none"}
+            preload="metadata"
             crossOrigin="anonymous"
             onError={() => {
               // Gracefully handle CORS errors - app will continue without dubbing

@@ -26,8 +26,8 @@ export function AdminVideos() {
     queryKey: ['admin-videos', page, pageSize],
     queryFn: () =>
       adminApi.listVideos({
-        skip: page * pageSize,
-        limit: pageSize,
+        page: page + 1, // API uses 1-based page numbering
+        pageSize: pageSize,
       }),
     staleTime: 30000, // Cache for 30 seconds
   });
@@ -41,7 +41,7 @@ export function AdminVideos() {
 
   // Debug log
   console.log('📹 Videos data:', data);
-  console.log('📹 Videos array:', data?.videos);
+  console.log('📹 Is array?', Array.isArray(data));
 
   // Video action mutation
   const videoActionMutation = useMutation({
@@ -79,7 +79,8 @@ export function AdminVideos() {
   };
 
   // Filter videos by search and status (client-side for current page)
-  const allVideos = data?.videos || [];
+  // API /api/v1/videos returns array directly: [{}, {}, ...]
+  const allVideos = Array.isArray(data) ? data : (data?.data || data?.videos || []);
   
   const filteredVideos = allVideos.filter((video: any) => {
     // Search filter
@@ -95,7 +96,9 @@ export function AdminVideos() {
   });
 
   // Get stats from dedicated API endpoint
-  const totalVideos = data?.total || 0;
+  // Since API returns array directly, we can't get total from response
+  // Use allVideos.length for current page or stats API for total
+  const totalVideos = statsData?.total || allVideos.length;
   const stats = {
     total: statsData?.total || totalVideos,
     public: statsData?.public || 0,

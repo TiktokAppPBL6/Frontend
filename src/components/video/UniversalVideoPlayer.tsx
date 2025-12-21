@@ -78,20 +78,21 @@ function UniversalVideoPlayerComponent({
     audioRef,
   });
   
-  // Sync external state to internal state for detail mode
-  // IMPORTANT: Only update internal state directly, don't call toggle functions
-  // Toggle functions are called from handleMuteToggle/handleDubbingToggle
-  useEffect(() => {
-    if (!isFeedMode && externalIsMuted !== undefined && externalIsMuted !== isMuted) {
-      setIsMuted(externalIsMuted);
-    }
-  }, [isFeedMode, externalIsMuted, isMuted, setIsMuted]);
+  // Sync external state to internal state for detail mode - INITIAL ONLY
+  // After initial mount, all changes come from handleMuteToggle/handleDubbingToggle
+  const [isInitialized, setIsInitialized] = useState(false);
   
   useEffect(() => {
-    if (!isFeedMode && externalIsDubbing !== undefined && externalIsDubbing !== isDubbing) {
-      setIsDubbing(externalIsDubbing);
+    if (!isFeedMode && !isInitialized) {
+      if (externalIsMuted !== undefined) {
+        setIsMuted(externalIsMuted);
+      }
+      if (externalIsDubbing !== undefined) {
+        setIsDubbing(externalIsDubbing);
+      }
+      setIsInitialized(true);
     }
-  }, [isFeedMode, externalIsDubbing, isDubbing, setIsDubbing]);
+  }, [isFeedMode, externalIsMuted, externalIsDubbing, isInitialized, setIsMuted, setIsDubbing]);
   
   // Use internal states for both modes (synced from external in detail mode)
   const effectiveIsMuted = isMuted;
@@ -184,7 +185,6 @@ function UniversalVideoPlayerComponent({
           audioRef={audioRef}
           currentTimeRef={currentTimeRef}
           isMuted={effectiveIsMuted}
-          isDubbing={effectiveIsDubbing}
           subtitleLanguage={subtitleLanguage}
           transcriptData={transcriptData}
           onVideoClick={handleVideoClick}

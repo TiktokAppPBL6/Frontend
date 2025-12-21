@@ -9,7 +9,6 @@ interface VideoPlayerWithSubtitlesProps {
   audioRef: React.RefObject<HTMLAudioElement>;
   currentTimeRef: MutableRefObject<number>;
   isMuted: boolean;
-  isDubbing: boolean;
   subtitleLanguage: 'off' | 'en' | 'vi';
   transcriptData: any;
   onVideoClick: () => void;
@@ -21,7 +20,6 @@ export function VideoPlayerWithSubtitles({
   audioRef,
   currentTimeRef,
   isMuted,
-  isDubbing,
   subtitleLanguage,
   transcriptData,
   onVideoClick,
@@ -33,7 +31,6 @@ export function VideoPlayerWithSubtitles({
         videoRef={videoRef}
         audioRef={audioRef}
         isMuted={isMuted}
-        isDubbing={isDubbing}
         onVideoClick={onVideoClick}
       />
 

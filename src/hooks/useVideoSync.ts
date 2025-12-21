@@ -26,17 +26,32 @@ export function useVideoSync({ videoRef, audioRef, isDubbing }: UseVideoSyncProp
 
     const handleSeeked = () => {
       if (isDubbing && audio) {
+        const targetTime = video.currentTime;
+        const wasPlaying = !video.paused;
+        
         const syncAndPlay = () => {
-          audio.currentTime = video.currentTime;
-          if (!video.paused) {
-            audio.play().catch(() => {});
+          // Skip if already at target time
+          if (Math.abs(audio.currentTime - targetTime) < 0.1) {
+            if (wasPlaying) {
+              audio.play().catch(() => {});
+            }
+            return;
           }
+          
+          // Wait for audio seek to complete before playing
+          const handleAudioSeeked = () => {
+            if (wasPlaying && !audio.error) {
+              audio.play().catch(() => {});
+            }
+          };
+          audio.addEventListener('seeked', handleAudioSeeked, { once: true });
+          audio.currentTime = targetTime;
         };
         
-        if (audio.readyState >= 1) {
+        if (audio.readyState >= 2) {
           syncAndPlay();
         } else {
-          audio.addEventListener('loadedmetadata', syncAndPlay, { once: true });
+          audio.addEventListener('canplay', syncAndPlay, { once: true });
         }
       }
     };
@@ -46,19 +61,30 @@ export function useVideoSync({ videoRef, audioRef, isDubbing }: UseVideoSyncProp
         // Only sync and play audio if audio is currently paused
         // This avoids conflict when toggleDubbing already handled the play
         if (audio.paused) {
-          // Sync time before playing
-          if (audio.readyState >= 2) {
-            audio.currentTime = video.currentTime;
-            audio.play().catch(() => {});
-          } else {
-            const playWhenReady = () => {
+          const targetTime = video.currentTime;
+          
+          const syncAndPlay = () => {
+            // Skip seek if already at target time
+            if (Math.abs(audio.currentTime - targetTime) < 0.1) {
+              audio.play().catch(() => {});
+              return;
+            }
+            
+            // Wait for audio seek to complete before playing
+            const handleAudioSeeked = () => {
               if (!audio.error) {
-                audio.currentTime = video.currentTime;
                 audio.play().catch(() => {});
               }
             };
-            audio.addEventListener('loadedmetadata', playWhenReady, { once: true });
-            audio.addEventListener('canplay', playWhenReady, { once: true });
+            audio.addEventListener('seeked', handleAudioSeeked, { once: true });
+            audio.currentTime = targetTime;
+          };
+          
+          // Sync time before playing
+          if (audio.readyState >= 2) {
+            syncAndPlay();
+          } else {
+            audio.addEventListener('canplay', syncAndPlay, { once: true });
           }
         }
       }

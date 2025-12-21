@@ -235,11 +235,20 @@ export const adminApi = {
   },
 
   /**
-   * GET /api/v1/admin/videos/list
-   * List videos with skip/limit pagination
+   * GET /api/v1/videos (tạm dùng getall endpoint)
+   * List videos - sử dụng endpoint getall thay vì admin/videos/list
    */
-  listVideos: async (params: { skip?: number; limit?: number; visibility?: string } = {}) => {
-    const response = await axiosClient.get('/api/v1/admin/videos/list', { params });
+  listVideos: async (params: { page?: number; pageSize?: number; skip?: number; limit?: number; visibility?: string } = {}) => {
+    // Support both page/pageSize (new) and skip/limit (old) for backward compatibility
+    const page = params.page || (params.skip ? Math.floor(params.skip / (params.limit || 20)) + 1 : 1);
+    const pageSize = params.pageSize || params.limit || 20;
+    
+    const response = await axiosClient.get('/api/v1/videos', { 
+      params: {
+        page,
+        pageSize
+      }
+    });
     return response.data;
   },
 
