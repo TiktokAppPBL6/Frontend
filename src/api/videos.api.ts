@@ -17,8 +17,8 @@ export const videosApi = {
   getVideos: async (params?: PaginationParams & { sort?: string; order?: 'asc' | 'desc' }): Promise<VideosResponse> => {
     try {
       // Backend uses skip/limit instead of page/pageSize
-      const skip = params?.page ? (params.page - 1) * (params.pageSize || 20) : 0;
-      const limit = params?.pageSize || 20;
+      const skip = params?.page ? (params.page - 1) * (params.pageSize || 200) : 0;
+      const limit = params?.pageSize || 200;
       
       const response = await axiosClient.get<any>('/api/v1/videos/', {
         params: { 
@@ -53,8 +53,8 @@ export const videosApi = {
   getFollowingFeed: async (params?: PaginationParams): Promise<VideosResponse> => {
     try {
       // Backend uses skip/limit
-      const skip = params?.page ? (params.page - 1) * (params.pageSize || 20) : 0;
-      const limit = params?.pageSize || 20;
+      const skip = params?.page ? (params.page - 1) * (params.pageSize || 200) : 0;
+      const limit = params?.pageSize || 200;
       
       const response = await axiosClient.get<any>('/api/v1/videos/following/feed', {
         params: { skip, limit },
@@ -96,8 +96,8 @@ export const videosApi = {
   getUserVideos: async (userId: number, params?: PaginationParams): Promise<VideosResponse> => {
     try {
       // Backend uses skip/limit
-      const skip = params?.page ? (params.page - 1) * (params.pageSize || 20) : 0;
-      const limit = params?.pageSize || 20;
+      const skip = params?.page ? (params.page - 1) * (params.pageSize || 200) : 0;
+      const limit = params?.pageSize || 200;
       
       const response = await axiosClient.get<any>(`/api/v1/videos/user/${userId}`, {
         params: { skip, limit },
@@ -133,8 +133,8 @@ export const videosApi = {
   searchVideos: async (params: SearchParams): Promise<Video[]> => {
     try {
       // Backend expects: q, skip, limit (not query, page, pageSize)
-      const skip = params.page ? (params.page - 1) * (params.pageSize || 20) : 0;
-      const limit = params.pageSize || 20;
+      const skip = params.page ? (params.page - 1) * (params.pageSize || 200) : 0;
+      const limit = params.pageSize || 200;
       
       const response = await axiosClient.get<any>('/api/v1/videos/search', { 
         params: {
