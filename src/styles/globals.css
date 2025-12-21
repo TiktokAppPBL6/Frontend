@@ -81,3 +81,48 @@ video {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
+
+/* Toast animations */
+@keyframes animate-enter {
+  0% {
+    transform: translateX(calc(100% + 1rem));
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes animate-leave {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(100% + 1rem));
+    opacity: 0;
+  }
+}
+
+.animate-enter {
+  animation: animate-enter 0.3s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+}
+
+.animate-leave {
+  animation: animate-leave 0.2s ease-in forwards;
+}
+
+/* Shimmer animation for buttons */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}

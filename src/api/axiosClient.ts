@@ -4,6 +4,12 @@ import { API_FULL_URL } from '@/config/api';
 
 const BASE_URL = API_FULL_URL;
 
+// Log API config in development only
+if (import.meta.env.DEV) {
+  console.log('🔍 [axiosClient] BASE_URL:', BASE_URL);
+  console.log('🔍 [axiosClient] VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+}
+
 export const axiosClient = axios.create({
   baseURL: BASE_URL,
   timeout: 30000,

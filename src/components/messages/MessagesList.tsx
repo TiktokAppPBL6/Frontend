@@ -40,14 +40,18 @@ export function MessagesList({
       {messages.map((msg) => {
         const isSender = msg.senderId === currentUserId;
         
+        // Always use sender's avatar (the person who sent the message)
+        const avatarUrl = msg.sender?.avatarUrl;
+        const displayName = msg.sender?.username || `User ${msg.senderId}`;
+        
         return (
           <div
             key={msg.id}
             className={`flex gap-3 ${isSender ? 'flex-row-reverse' : 'flex-row'}`}
           >
             <Avatar
-              src={undefined}
-              alt={`User ${isSender ? msg.senderId : msg.receiverId}`}
+              src={avatarUrl}
+              alt={displayName}
               size="sm"
               className="flex-shrink-0"
             />

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Clear Service Worker</title>
+</head>
+<body>
+  <h1>Clearing Service Worker...</h1>
+  <script>
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      registrations.forEach(registration => {
+        registration.unregister();
+      });
+      alert('Service Worker cleared! Close all tabs and reopen.');
+    });
+  </script>
+</body>
+</html>

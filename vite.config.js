@@ -9,9 +9,20 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    dedupe: ['react', 'react-dom'], // Force single React instance
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom'], // Pre-bundle React
   },
   server: {
     port: 3000,
+    strictPort: false, // Allow multiple instances for WebSocket testing
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      clientPort: 3000,
+      port: 3000,
+    },
     proxy: {
       '/api/v1/auth/google/callback': {
         target: 'http://localhost:8000',

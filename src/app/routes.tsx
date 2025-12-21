@@ -25,8 +25,6 @@ const AdminDashboard = lazy(() => import('@/pages/admin').then(m => ({ default: 
 const AdminUsers = lazy(() => import('@/pages/admin').then(m => ({ default: m.AdminUsers })));
 const AdminVideos = lazy(() => import('@/pages/admin').then(m => ({ default: m.AdminVideos })));
 const AdminReports = lazy(() => import('@/pages/admin').then(m => ({ default: m.AdminReports })));
-const AdminComments = lazy(() => import('@/pages/admin').then(m => ({ default: m.AdminComments })));
-const AdminAnalytics = lazy(() => import('@/pages/admin').then(m => ({ default: m.AdminAnalytics })));
 
 // Loading fallback
 const PageLoader = () => (
@@ -62,7 +60,7 @@ export function AppRoutes() {
           <Route
             path="/home"
             element={
-              <AuthGuard>
+              <AuthGuard blockAdmin>
                 <AppLayout>
                   <Home />
                 </AppLayout>
@@ -200,22 +198,6 @@ export function AppRoutes() {
             element={
               <AuthGuard requireAdmin>
                 <AdminReports />
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/admin/comments"
-            element={
-              <AuthGuard requireAdmin>
-                <AdminComments />
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/admin/analytics"
-            element={
-              <AuthGuard requireAdmin>
-                <AdminAnalytics />
               </AuthGuard>
             }
           />

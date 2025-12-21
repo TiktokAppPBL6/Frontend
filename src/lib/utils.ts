@@ -16,24 +16,40 @@ export function formatNumber(num: number): string {
   return num.toString();
 }
 
-export function formatDate(date: string): string {
-  const now = new Date();
-  // Backend trả về datetime không có timezone, coi như local time
-  // Nếu date không có 'Z' hoặc timezone offset, thêm 'Z' để coi như UTC
-  const dateStr = date.includes('Z') || date.includes('+') || date.includes('T') && date.split('T')[1].includes('-') 
-    ? date 
-    : date + 'Z';
-  const then = new Date(dateStr);
-  const diffMs = now.getTime() - then.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
+export function formatDate(date: string | undefined | null): string {
+  // Handle undefined/null date
+  if (!date) {
+    return 'Vừa xong';
+  }
 
-  if (diffMins < 1) return 'Vừa xong';
-  if (diffMins < 60) return `${diffMins} phút trước`;
-  if (diffHours < 24) return `${diffHours} giờ trước`;
-  if (diffDays < 7) return `${diffDays} ngày trước`;
-  return then.toLocaleDateString('vi-VN');
+  try {
+    const now = new Date();
+    // Backend trả về datetime không có timezone, coi như local time
+    // Nếu date không có 'Z' hoặc timezone offset, thêm 'Z' để coi như UTC
+    const dateStr = date.includes('Z') || date.includes('+') || date.includes('T') && date.split('T')[1].includes('-') 
+      ? date 
+      : date + 'Z';
+    const then = new Date(dateStr);
+    
+    // Check if date is valid
+    if (isNaN(then.getTime())) {
+      return 'Vừa xong';
+    }
+    
+    const diffMs = now.getTime() - then.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Vừa xong';
+    if (diffMins < 60) return `${diffMins} phút trước`;
+    if (diffHours < 24) return `${diffHours} giờ trước`;
+    if (diffDays < 7) return `${diffDays} ngày trước`;
+    return then.toLocaleDateString('vi-VN');
+  } catch (error) {
+    console.error('Error formatting date:', error, 'Date value:', date);
+    return 'Vừa xong';
+  }
 }
 
 // Get full URL for media files (images, videos)

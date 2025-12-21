@@ -104,8 +104,9 @@
                 
                 // Call backend to exchange code for token
                 console.log('📡 Calling backend to exchange code...');
-                // Use production backend URL (Azure)
-                const backendUrl = 'https://toptop-backend-api.azurewebsites.net/api/v1/auth/google/callback?' + urlParams.toString();
+                // Get backend URL from environment or use default
+                const apiBaseUrl = window.__API_CONFIG__?.API_BASE_URL || 'http://127.0.0.1:8000';
+                const backendUrl = apiBaseUrl + '/api/v1/auth/google/callback?' + urlParams.toString();
                 
                 infoEl.textContent = 'Đang kết nối với server...';
                 infoEl.style.display = 'block';

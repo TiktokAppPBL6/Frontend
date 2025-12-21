@@ -1,144 +1,71 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { notificationsApi } from '@/api/notifications.api';
+import { useNotificationStore } from '@/app/store/notification';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
-import { Bell, Heart, MessageCircle, UserPlus, AlertCircle, Ban, VideoOff } from 'lucide-react';
+import { Bell, Heart, MessageCircle, UserPlus, AlertCircle, Ban, VideoOff, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { WebSocketService } from '@/services/websocket';
+import { useNavigate } from 'react-router-dom';
 
 /**
- * Notifications Page - WebSocket Integration theo BACKEND_IMPLEMENTATION_GUIDE.md
- * - Subscribe to "notification:new" event
- * - Subscribe to "notification:unseen_count" event
- * - Subscribe to admin events: "admin:user_banned", "admin:video_deleted", "admin:report_resolved"
- * - Call markNotificationsAsSeen when opening page
+ * Notifications Page - với WebSocket real-time
  */
 export function Notifications() {
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  
+  // Get notifications from Zustand store (real-time via WebSocket)
+  const notifications = useNotificationStore((state) => state.notifications);
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const isLoading = useNotificationStore((state) => state.isLoading);
+  const markAllAsSeen = useNotificationStore((state) => state.markAllAsSeen);
+  const markAsSeen = useNotificationStore((state) => state.markAsSeen);
+  const removeNotification = useNotificationStore((state) => state.removeNotification);
+  const fetchNotifications = useNotificationStore((state) => state.fetchNotifications);
+  const isConnected = useNotificationStore((state) => state.isConnected);
 
-  // Query notifications (no polling - use WebSocket)
-  const { data: notifications, isLoading } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: () => notificationsApi.getNotifications(),
-    // Removed refetchInterval - use WebSocket instead
-  });
-
-  // Query unseen count (no polling - use WebSocket)
-  const { data: unseenCount } = useQuery({
-    queryKey: ['notifications-unseen-count'],
-    queryFn: notificationsApi.getUnseenCount,
-    // Removed refetchInterval - use WebSocket instead
-  });
-
-  // WebSocket Integration - Subscribe to events
+  // Fetch notifications from backend when page loads
   useEffect(() => {
-    const ws = WebSocketService.getInstance();
+    console.log('🔍 Notifications page mounted');
+    fetchNotifications();
+  }, [fetchNotifications]);
 
-    // Handler for new notification
-    const handleNewNotification = (event: any) => {
-      console.log('🔔 New notification:', event);
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications-unseen-count'] });
-      // Show toast
-      toast.success(`Thông báo mới: ${event.data.message || 'Bạn có thông báo mới'}`);
-    };
-
-    // Handler for unseen count update
-    const handleUnseenCount = (event: any) => {
-      console.log('📊 Unseen count update:', event);
-      queryClient.setQueryData(['notifications-unseen-count'], event.data.count);
-    };
-
-    // Handler for admin events
-    const handleUserBanned = (event: any) => {
-      console.log('🚫 User banned:', event);
-      toast.error(
-        <div className="flex items-center gap-2">
-          <Ban className="w-5 h-5" />
-          <div>
-            <div className="font-semibold">Tài khoản bị khóa</div>
-            <div className="text-sm">{event.data.reason || 'Vi phạm chính sách'}</div>
-          </div>
-        </div>,
-        { duration: 10000 }
-      );
-      // Refresh notifications
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    };
-
-    const handleVideoDeleted = (event: any) => {
-      console.log('🗑️ Video deleted:', event);
-      toast.error(
-        <div className="flex items-center gap-2">
-          <VideoOff className="w-5 h-5" />
-          <div>
-            <div className="font-semibold">Video bị xóa</div>
-            <div className="text-sm">{event.data.reason || 'Vi phạm nội dung'}</div>
-          </div>
-        </div>,
-        { duration: 10000 }
-      );
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    };
-
-    const handleReportResolved = (event: any) => {
-      console.log('✅ Report resolved:', event);
-      toast.success(
-        <div className="flex items-center gap-2">
-          <AlertCircle className="w-5 h-5" />
-          <div>
-            <div className="font-semibold">Báo cáo đã xử lý</div>
-            <div className="text-sm">{event.data.result || 'Đã giải quyết'}</div>
-          </div>
-        </div>,
-        { duration: 10000 }
-      );
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    };
-
-    // Subscribe to WebSocket events
-    ws.on('notification:new', handleNewNotification);
-    ws.on('notification:unseen_count', handleUnseenCount);
-    ws.on('admin:user_banned', handleUserBanned);
-    ws.on('admin:video_deleted', handleVideoDeleted);
-    ws.on('admin:report_resolved', handleReportResolved);
-
-    // Cleanup on unmount
-    return () => {
-      ws.off('notification:new', handleNewNotification);
-      ws.off('notification:unseen_count', handleUnseenCount);
-      ws.off('admin:user_banned', handleUserBanned);
-      ws.off('admin:video_deleted', handleVideoDeleted);
-      ws.off('admin:report_resolved', handleReportResolved);
-    };
-  }, [queryClient]);
-
-  // Mark all as seen when opening page
+  // Debug: Log notifications
   useEffect(() => {
-    if (!notifications || notifications.length === 0) return;
-
-    const ws = WebSocketService.getInstance();
-    const unseenIds = notifications
-      .filter((notif: any) => !notif.is_read)
-      .map((notif: any) => notif.id);
-
-    if (unseenIds.length > 0) {
-      ws.markNotificationsAsSeen(unseenIds);
-    }
+    console.log('📋 Current notifications:', notifications.length);
   }, [notifications]);
 
-  const markAllSeenMutation = useMutation({
-    mutationFn: notificationsApi.markAllAsSeen,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications-unseen-count'] });
+  const handleMarkAllSeen = async () => {
+    try {
+      await notificationsApi.markAllAsSeen();
+      markAllAsSeen();
       toast.success('Đã đánh dấu tất cả là đã đọc');
-    },
-  });
+    } catch (error) {
+      toast.error('Không thể đánh dấu đã đọc');
+    }
+  };
 
-  const handleMarkAllSeen = () => {
-    markAllSeenMutation.mutate();
+  const handleDeleteNotification = async (id: number) => {
+    try {
+      await notificationsApi.deleteNotification(id);
+      removeNotification(id);
+      toast.success('Đã xóa thông báo');
+    } catch (error) {
+      toast.error('Không thể xóa thông báo');
+    }
+  };
+
+  const handleNotificationClick = (notification: any) => {
+    // Mark as seen when clicked
+    if (!notification.seen) {
+      markAsSeen([notification.id]);
+    }
+    
+    // Navigate based on notification type
+    if (notification.videoId) {
+      navigate(`/video/${notification.videoId}`);
+    } else if (notification.fromUserId) {
+      navigate(`/profile/${notification.fromUserId}`);
+    }
   };
 
   const getNotificationIcon = (type: string) => {
@@ -161,10 +88,18 @@ export function Notifications() {
   };
 
   const getNotificationMessage = (notification: any) => {
+    // Parse backend message và format lại
+    const content = notification.content || '';
+    
     switch (notification.type) {
       case 'like':
         return 'đã thích video của bạn';
       case 'comment':
+        // Extract comment text from "commented on your video: actual comment"
+        const commentMatch = content.match(/commented on your video:\s*(.+)/i);
+        if (commentMatch && commentMatch[1]) {
+          return `đã bình luận video của bạn: ${commentMatch[1]}`;
+        }
         return 'đã bình luận về video của bạn';
       case 'follow':
         return 'đã theo dõi bạn';
@@ -175,77 +110,170 @@ export function Notifications() {
       case 'admin_resolve':
         return 'đã xử lý báo cáo của bạn';
       default:
-        return 'có hoạt động mới';
+        return content || 'có hoạt động mới';
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#121212] py-6">
-      <div className="container mx-auto max-w-2xl px-4">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Thông báo</h1>
-            {unseenCount !== undefined && unseenCount > 0 && (
-              <p className="text-sm text-gray-400 mt-1">
-                {unseenCount} thông báo chưa đọc
-              </p>
+    <div className="min-h-screen bg-[#121212]">
+      {/* Header - Sticky */}
+      <div className="sticky top-0 z-10 bg-[#121212]/95 backdrop-blur-lg border-b border-gray-800">
+        <div className="container mx-auto max-w-2xl px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                <Bell className="w-7 h-7 text-[#FE2C55]" />
+                Thông báo
+                {isConnected ? (
+                  <span className="flex items-center gap-1 text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                    Live
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-xs text-gray-500 bg-gray-500/10 px-2 py-1 rounded-full" title="Đang sử dụng REST API">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
+                    Offline
+                  </span>
+                )}
+              </h1>
+              {unreadCount > 0 && (
+                <p className="text-sm text-gray-400 mt-1">
+                  <span className="font-semibold text-[#FE2C55]">{unreadCount}</span> thông báo chưa đọc
+                </p>
+              )}
+            </div>
+            {unreadCount > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleMarkAllSeen}
+                className="bg-[#FE2C55]/10 border-[#FE2C55]/30 text-[#FE2C55] hover:bg-[#FE2C55]/20 hover:border-[#FE2C55]/50 transition-all"
+              >
+                Đánh dấu đã đọc
+              </Button>
             )}
           </div>
-          {unseenCount !== undefined && unseenCount > 0 && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleMarkAllSeen}
-              disabled={markAllSeenMutation.isPending}
-              className="bg-transparent border-gray-600 text-white hover:bg-gray-800"
-            >
-              Đánh dấu đã đọc
-            </Button>
-          )}
         </div>
+      </div>
 
+      {/* Content */}
+      <div className="container mx-auto max-w-2xl px-4 py-6">
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FE2C55]"></div>
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="p-4 rounded-xl bg-[#1e1e1e] border border-gray-800 animate-pulse">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gray-700"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-700 rounded w-1/2"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        ) : notifications && notifications.length > 0 ? (
+        ) : notifications.length > 0 ? (
           <div className="space-y-2">
-            {notifications.map((notification) => (
+            {notifications.map((notification, index) => (
               <div
-                key={notification.id}
-                className={`flex items-start gap-4 p-4 rounded-lg border transition-colors ${
+                key={`${notification.id}-${index}`}
+                className={`group relative flex items-start gap-4 p-4 rounded-2xl border transition-all duration-200 cursor-pointer ${
                   notification.seen 
-                    ? 'bg-[#1e1e1e] border-gray-800' 
-                    : 'bg-[#2a2a2a] border-[#FE2C55]/30'
+                    ? 'bg-[#1e1e1e]/50 border-gray-800/50 hover:bg-[#1e1e1e] hover:border-gray-700' 
+                    : 'bg-gradient-to-br from-[#2a2a2a] via-[#252525] to-[#1e1e1e] border-[#FE2C55]/30 hover:border-[#FE2C55]/50 shadow-lg shadow-[#FE2C55]/5'
                 }`}
+                onClick={() => handleNotificationClick(notification)}
               >
-                <div className="flex-shrink-0">
-                  {getNotificationIcon(notification.type)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-300">
-                    <span className="font-semibold text-white">Người dùng #{notification.userId}</span>{' '}
-                    {getNotificationMessage(notification)}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formatDate(notification.createdAt)}
-                  </p>
-                </div>
+                {/* Unread glow indicator */}
                 {!notification.seen && (
-                  <div className="w-2 h-2 bg-[#FE2C55] rounded-full flex-shrink-0 mt-2" />
+                  <>
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#FE2C55] via-pink-500 to-pink-600 rounded-l-2xl"></div>
+                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#FE2C55] animate-ping"></div>
+                  </>
                 )}
+                
+                {/* Avatar với animation */}
+                <div className="flex-shrink-0 relative">
+                  {notification.fromUser?.avatarUrl ? (
+                    <div className="relative">
+                      {!notification.seen && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#FE2C55] to-pink-500 rounded-full blur-md opacity-50 animate-pulse"></div>
+                      )}
+                      <img 
+                        src={notification.fromUser.avatarUrl} 
+                        alt={notification.fromUser.username}
+                        className={`w-12 h-12 rounded-full object-cover relative ${
+                          notification.seen 
+                            ? 'ring-2 ring-gray-700' 
+                            : 'ring-2 ring-[#FE2C55]/50'
+                        }`}
+                      />
+                    </div>
+                  ) : (
+                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center ${
+                      notification.seen 
+                        ? 'ring-2 ring-gray-700' 
+                        : 'ring-2 ring-[#FE2C55]/50'
+                    }`}>
+                      {getNotificationIcon(notification.type)}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Content */}
+                <div className="flex-1 min-w-0 pr-2">
+                  <p className="text-sm text-gray-200 leading-relaxed">
+                    {notification.fromUser ? (
+                      <span className="font-bold text-white hover:text-[#FE2C55] transition-colors">
+                        @{notification.fromUser.username}
+                      </span>
+                    ) : (
+                      <span className="font-bold text-white">Hệ thống</span>
+                    )}{' '}
+                    <span className="text-gray-400">
+                      {getNotificationMessage(notification)}
+                    </span>
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <p className="text-xs text-gray-500 font-medium">
+                      {formatDate(notification.createdAt)}
+                    </p>
+                    {!notification.seen && (
+                      <span className="px-2.5 py-0.5 text-xs font-bold bg-[#FE2C55] text-white rounded-full animate-pulse">
+                        MỚI
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Actions */}
+                <div className="flex items-start gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteNotification(notification.id);
+                    }}
+                    className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                    title="Xóa"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-32">
-            <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-[#1e1e1e] mb-8">
-              <Bell className="h-14 w-14 text-gray-600" />
+          <div className="text-center py-20">
+            <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-gradient-to-br from-[#1e1e1e] to-[#252525] mb-6 relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#FE2C55]/20 to-pink-500/20 rounded-full blur-xl"></div>
+              <Bell className="h-16 w-16 text-gray-600 relative" />
             </div>
-            <h3 className="text-white text-2xl font-bold mb-3">Chưa có thông báo</h3>
+            <h3 className="text-white text-3xl font-bold mb-3 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+              Chưa có thông báo
+            </h3>
             <p className="text-gray-400 text-base max-w-md mx-auto leading-relaxed">
-              Khi ai đó thích, bình luận hoặc theo dõi bạn,<br />
-              bạn sẽ nhận được thông báo ở đây
+              Khi có người thích, bình luận hoặc theo dõi bạn,<br />
+              các thông báo sẽ xuất hiện tại đây
             </p>
           </div>
         )}

@@ -38,14 +38,18 @@ export interface AdminStats {
 
 export interface ChartDataPoint {
   date: string;
-  [key: string]: string | number;
+  users?: number;
+  videos?: number;
+  likes?: number;
+  comments?: number;
+  reports?: number;
 }
 
 export interface AdminCharts {
-  users_chart: ChartDataPoint[];
-  videos_chart: ChartDataPoint[];
-  reports_chart: ChartDataPoint[];
-  engagement_chart: ChartDataPoint[];
+  users_chart: Array<{ date: string; users: number }>;
+  videos_chart: Array<{ date: string; videos: number }>;
+  engagement_chart: Array<{ date: string; likes: number; comments: number }>;
+  reports_chart: Array<{ date: string; reports: number }>;
 }
 
 export interface RecentActivity {
@@ -98,13 +102,15 @@ export interface AdminTestResult {
 
 export const adminApi = {
   // ==================== STATS APIS (theo PHẦN 2) ====================
+  // Updated: 2025-12-21 - Fixed paths to /api/v1/admin/*
   
   /**
    * GET /api/v1/admin/stats/overview
    * Polling: 60s
    */
   getAdminOverview: async (): Promise<AdminStats> => {
-    const response = await axiosClient.get('/admin/stats/overview');
+    const response = await axiosClient.get('/api/v1/admin/stats/overview');
+    console.log('📊 Fetching admin overview from:', '/api/v1/admin/stats/overview');
     return response.data;
   },
 
@@ -113,7 +119,8 @@ export const adminApi = {
    * Polling: 60s
    */
   getAdminCharts: async (): Promise<AdminCharts> => {
-    const response = await axiosClient.get('/admin/stats/charts');
+    const response = await axiosClient.get('/api/v1/admin/stats/charts');
+    console.log('📈 Fetching admin charts from:', '/api/v1/admin/stats/charts');
     return response.data;
   },
 
@@ -122,13 +129,31 @@ export const adminApi = {
    * Polling: 30s
    */
   getRecentActivity: async (limit = 10): Promise<RecentActivity> => {
-    const response = await axiosClient.get('/admin/stats/recent-activity', {
+    const response = await axiosClient.get('/api/v1/admin/stats/recent-activity', {
       params: { limit }
     });
     return response.data;
   },
 
   // ==================== USER MANAGEMENT (theo PHẦN 2) ====================
+
+  /**
+   * GET /api/v1/admin/users/stats
+   * Get user statistics (total, active, blocked)
+   */
+  getUsersStats: async () => {
+    const response = await axiosClient.get('/api/v1/admin/users/stats');
+    return response.data;
+  },
+
+  /**
+   * GET /api/v1/admin/users/list
+   * List users with skip/limit pagination
+   */
+  listUsers: async (params: { skip?: number; limit?: number; status?: string } = {}) => {
+    const response = await axiosClient.get('/api/v1/admin/users/list', { params });
+    return response.data;
+  },
 
   /**
    * GET /api/v1/admin/users
@@ -195,6 +220,24 @@ export const adminApi = {
   },
 
   // ==================== VIDEO MANAGEMENT (theo PHẦN 2) ====================
+
+  /**
+   * GET /api/v1/admin/videos/stats
+   * Get video statistics (total, public, hidden, deleted)
+   */
+  getVideosStats: async () => {
+    const response = await axiosClient.get('/api/v1/admin/videos/stats');
+    return response.data;
+  },
+
+  /**
+   * GET /api/v1/admin/videos/list
+   * List videos with skip/limit pagination
+   */
+  listVideos: async (params: { skip?: number; limit?: number; visibility?: string } = {}) => {
+    const response = await axiosClient.get('/api/v1/admin/videos/list', { params });
+    return response.data;
+  },
 
   /**
    * GET /api/v1/admin/videos
@@ -509,6 +552,10 @@ export const adminApi = {
       );
       
       console.log('👥 Admin list users response:', response.data);
+      console.log('👥 Admin list users headers:', response.headers);
+      
+      // Get total count from header (if available)
+      const totalCount = response.headers['x-total-count'];
       
       // Normalize response
       const data = response.data;
@@ -516,14 +563,14 @@ export const adminApi = {
       if (Array.isArray(data)) {
         return {
           users: data,
-          total: data.length,
+          total: totalCount ? parseInt(totalCount, 10) : data.length,
         };
       }
       
       // If backend returns object with users array
       return {
         users: data.users || data.items || data.data || [],
-        total: data.total || data.total_count || data.count || 0,
+        total: totalCount ? parseInt(totalCount, 10) : (data.total || data.total_count || data.count || 0),
       };
     } catch (error) {
       throw error;
@@ -544,6 +591,10 @@ export const adminApi = {
       );
       
       console.log('📹 Admin list videos response:', response.data);
+      console.log('📹 Admin list videos headers:', response.headers);
+      
+      // Get total count from header (if available)
+      const totalCount = response.headers['x-total-count'];
       
       // Normalize response
       const data = response.data;
@@ -551,14 +602,14 @@ export const adminApi = {
       if (Array.isArray(data)) {
         return {
           videos: data,
-          total: data.length,
+          total: totalCount ? parseInt(totalCount, 10) : data.length,
         };
       }
       
       // If backend returns object with videos array
       return {
         videos: data.videos || data.items || data.data || [],
-        total: data.total || data.total_count || data.count || 0,
+        total: totalCount ? parseInt(totalCount, 10) : (data.total || data.total_count || data.count || 0),
       };
     } catch (error) {
       throw error;

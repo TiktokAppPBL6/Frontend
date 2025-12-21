@@ -20,6 +20,13 @@ export function Avatar({ src, alt = 'Avatar', size = 'md', className }: AvatarPr
 
   const avatarUrl = getAvatarUrl(src);
   const defaultAvatar = '/avatar.jpg';
+  
+  // console.log('🖼️ Avatar component:', {
+  //   receivedSrc: src,
+  //   processedUrl: avatarUrl,
+  //   willUseDefault: !src || imageError,
+  //   alt
+  // });
 
   return (
     <div

@@ -25,14 +25,26 @@ export function useVideoControls({
   const [isDubbing, setIsDubbing] = useState(false);
 
   const toggleMute = useCallback(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted(videoRef.current.muted);
+    const videoEl = videoRef.current;
+    const audioEl = audioRef.current;
+    
+    if (!videoEl) return;
+    
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    
+    if (isDubbing && audioEl) {
+      // Đang dùng dubbing → mute/unmute audio dubbing
+      audioEl.muted = newMuted;
+      // Video vẫn luôn muted khi dubbing bật
+      videoEl.muted = true;
+    } else {
+      // Đang dùng audio gốc → mute/unmute video
+      videoEl.muted = newMuted;
+      // Audio không được dùng
+      if (audioEl) audioEl.muted = true;
     }
-    if (audioRef.current && isDubbing) {
-      audioRef.current.muted = !audioRef.current.muted;
-    }
-  }, [videoRef, audioRef, isDubbing]);
+  }, [videoRef, audioRef, isDubbing, isMuted]);
 
   const toggleDubbing = useCallback(() => {
     const newIsDubbing = !isDubbing;
@@ -44,6 +56,7 @@ export function useVideoControls({
     if (!videoEl || !audioEl) return;
     
     const wasPlaying = !videoEl.paused;
+    const currentTime = videoEl.currentTime;
     
     // Always sync audio time to current video position when toggling
     const syncAudioTime = () => {
@@ -54,14 +67,14 @@ export function useVideoControls({
       
       // Need HAVE_CURRENT_DATA (2) or higher to reliably set currentTime
       if (audioEl.readyState >= 2) {
-        audioEl.currentTime = videoEl.currentTime;
+        audioEl.currentTime = currentTime;
         return true;
       } else {
         // If not ready, force load and sync
         audioEl.load();
         const syncOnReady = () => {
           if (!audioEl.error) {
-            audioEl.currentTime = videoEl.currentTime;
+            audioEl.currentTime = currentTime;
           }
         };
         audioEl.addEventListener('loadedmetadata', syncOnReady, { once: true });
@@ -71,7 +84,11 @@ export function useVideoControls({
     };
     
     if (newIsDubbing) {
-      // Enable dubbing: mute video, sync and play audio
+      // BẬT dubbing: chuyển sang dùng audio dubbing
+      // - Mute video (không dùng audio gốc nữa)
+      // - Unmute/mute audio theo trạng thái isMuted hiện tại
+      // - Sync thời gian audio = video
+      // - Nếu video đang play → play audio
       videoEl.muted = true;
       audioEl.muted = isMuted;
       
@@ -86,10 +103,13 @@ export function useVideoControls({
         }
       }
     } else {
-      // Disable dubbing: restore video mute state, pause audio
-      videoEl.muted = isMuted;
+      // TẮT dubbing: chuyển về dùng audio gốc video
+      // - Pause audio dubbing
+      // - Unmute/mute video theo trạng thái isMuted hiện tại
+      // - Sync audio time cho lần sau (nếu bật lại)
       audioEl.pause();
-      audioEl.currentTime = videoEl.currentTime; // Sync for next time
+      audioEl.currentTime = currentTime;
+      videoEl.muted = isMuted;
     }
   }, [videoRef, audioRef, isDubbing, isMuted]);
 

@@ -4,12 +4,16 @@ import { Search } from 'lucide-react';
 interface ConversationsHeaderProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
+  isConnected?: boolean;
 }
 
-export function ConversationsHeader({ searchQuery, onSearchChange }: ConversationsHeaderProps) {
+export function ConversationsHeader({ searchQuery, onSearchChange, isConnected }: ConversationsHeaderProps) {
   return (
     <div className="flex-shrink-0 p-4 border-b border-gray-800">
-      <h1 className="text-2xl font-bold text-white mb-4">Tin nhắn</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold text-white">Tin nhắn</h1>
+        {isConnected && <span className="text-xs text-green-500">● Live</span>}
+      </div>
       
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />

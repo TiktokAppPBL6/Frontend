@@ -9,7 +9,6 @@ import {
   Bookmark,
   Search,
   LogOut,
-  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/app/store/auth';
@@ -47,11 +46,6 @@ export function Sidebar() {
     { icon: Bell, label: 'Thông báo', path: '/notifications' },
     { icon: User, label: 'Hồ sơ', path: `/user/${user?.id}` },
   ];
-
-  // Admin menu
-  const adminItems = user?.role === 'admin' ? [
-    { icon: Shield, label: 'Admin Panel', path: '/admin', exact: true },
-  ] : [];
 
   const isActive = (path: string, exact?: boolean) => {
     if (exact) {
@@ -111,33 +105,6 @@ export function Sidebar() {
               </Link>
             );
           })}
-
-          {/* Admin Menu */}
-          {adminItems.length > 0 && (
-            <>
-              <div className="border-t border-gray-800 my-2"></div>
-              {adminItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.path, item.exact);
-
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={cn(
-                      'flex items-center gap-4 px-3 py-3 rounded-lg transition-colors text-base',
-                      active
-                        ? 'bg-purple-500/10 text-purple-400 font-semibold'
-                        : 'text-gray-300 hover:bg-gray-800'
-                    )}
-                  >
-                    <Icon className="h-6 w-6 flex-shrink-0" />
-                    <span className="truncate">{item.label}</span>
-                  </Link>
-                );
-              })}
-            </>
-          )}
           
           {/* Đăng xuất trong menu */}
           <button

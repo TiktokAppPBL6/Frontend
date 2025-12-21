@@ -1,13 +1,43 @@
 import axiosClient from './axiosClient';
 import type { ID } from '@/types';
 
-export interface Message {
+export interface MessageUser {
+  id: number;
+  username: string;
+  fullName?: string;
+  avatarUrl?: string;
+}
+
+// API Message type - includes sender/receiver objects from backend
+export interface APIMessage {
   id: number;
   senderId: number;
   receiverId: number;
   content: string;
+  mediaUrl?: string;
   createdAt: string;
   seen: boolean;
+  sender?: MessageUser;
+  receiver?: MessageUser;
+}
+
+// Keep for backward compatibility
+export type Message = APIMessage;
+
+export interface ConversationItem {
+  userId: number;
+  username: string;
+  fullName?: string;
+  avatarUrl?: string;
+  lastMessage: {
+    id: number;
+    senderId: number;
+    receiverId: number;
+    content: string;
+    createdAt: string;
+    seen: boolean;
+  };
+  unreadCount: number;
 }
 
 export interface MessageSendRequest {
@@ -16,10 +46,10 @@ export interface MessageSendRequest {
 }
 
 export const messagesApi = {
-  // Get inbox - returns list of latest messages
-  getInbox: async (): Promise<Message[]> => {
+  // Get inbox - returns list of conversations with last message
+  getInbox: async (): Promise<ConversationItem[]> => {
     try {
-      const response = await axiosClient.get<Message[]>('/api/v1/messages/inbox');
+      const response = await axiosClient.get<ConversationItem[]>('/api/v1/messages/inbox');
       return response.data;
     } catch (error) {
       throw error;
@@ -61,6 +91,15 @@ export const messagesApi = {
     try {
       const response = await axiosClient.get<any[]>('/api/v1/messages/suggested-users');
       return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Mark messages as read
+  markAsRead: async (userId: ID): Promise<void> => {
+    try {
+      await axiosClient.put(`/api/v1/messages/${userId}/read`);
     } catch (error) {
       throw error;
     }

@@ -3,7 +3,9 @@ import { createRoot } from 'react-dom/client'
 import './styles/globals.css'
 import App from './app/App'
 
-// Register Service Worker for PWA
+// DISABLED: Service Worker causing cache issues
+// TODO: Re-enable after fixing cache strategy
+/*
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
@@ -16,6 +18,7 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+*/
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -17,7 +17,6 @@ export function Upload() {
     title: '',
     description: '',
     visibility: 'public' as 'public' | 'hidden',
-    enableDubbing: true,
     speakerId: 'id_1' as 'id_1' | 'id_2' | 'id_3' | 'id_4',
   });
   const [file, setFile] = useState<File | null>(null);
@@ -33,7 +32,6 @@ export function Upload() {
         title: '',
         description: '',
         visibility: 'public',
-        enableDubbing: true,
         speakerId: 'id_1',
       });
       setFile(null);
@@ -165,8 +163,8 @@ export function Upload() {
       description: formData.description || undefined,
       file: file!,
       visibility: formData.visibility,
-      enableDubbing: formData.enableDubbing,
-      speakerId: formData.enableDubbing ? formData.speakerId : undefined,
+      enableDubbing: true,
+      speakerId: formData.speakerId,
     });
   };
 
@@ -213,9 +211,7 @@ export function Upload() {
 
               {/* Dubbing Settings */}
               <DubbingSettings
-                enableDubbing={formData.enableDubbing}
                 speakerId={formData.speakerId}
-                onEnableChange={(enabled) => setFormData({ ...formData, enableDubbing: enabled })}
                 onSpeakerChange={(speakerId) => setFormData({ ...formData, speakerId })}
               />
 

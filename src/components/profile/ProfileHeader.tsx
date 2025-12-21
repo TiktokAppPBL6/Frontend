@@ -91,15 +91,19 @@ export function ProfileHeader({
                     {isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
                   </Button>
 
-                  {/* Message Button */}
-                  <Button
+                  {/* Message Button - TikTok Style */}
+                  <button
                     onClick={handleMessageClick}
-                    variant="outline"
-                    className="bg-[#1e1e1e] border-gray-700 hover:bg-gray-800 text-white px-6"
+                    className="relative group px-6 py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-105 active:scale-95 overflow-hidden"
                   >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Nhắn tin
-                  </Button>
+                    {/* Shimmer effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-shimmer" />
+                    
+                    <div className="relative flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4" strokeWidth={2.5} />
+                      <span>Nhắn tin</span>
+                    </div>
+                  </button>
                   
                   {/* Report User Menu */}
                   <div className="relative">
@@ -146,13 +150,13 @@ export function ProfileHeader({
               <span className="font-bold text-xl text-white group-hover:text-gray-300 transition-colors">
                 {formatNumber(followersCount)}
               </span>
-              <span className="text-gray-400 text-sm ml-2">Follower</span>
+              <span className="text-gray-400 text-sm ml-2">Người theo dõi</span>
             </button>
             <button onClick={onFollowingClick} className="group">
               <span className="font-bold text-xl text-white group-hover:text-gray-300 transition-colors">
                 {formatNumber(followingCount)}
               </span>
-              <span className="text-gray-400 text-sm ml-2">Đang follow</span>
+              <span className="text-gray-400 text-sm ml-2">Đang theo dõi</span>
             </button>
             <div>
               <span className="font-bold text-xl text-white">{formatNumber(videosCount)}</span>

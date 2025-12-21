@@ -6,7 +6,7 @@ class Config:
     
     # Application URLs
     BASE_URL = "http://localhost:3000"
-    API_BASE_URL = "http://localhost:8000"
+    API_BASE_URL = "https://toptop-backend-api.azurewebsites.net/"
     
     # Timeouts (seconds)
     IMPLICIT_WAIT = 10
